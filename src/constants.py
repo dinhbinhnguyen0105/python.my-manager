@@ -1,4 +1,5 @@
 import os
+
 PATH_RE_DB = os.path.join("src", "data", "real_estate.db")
 RE_CONNECTION = "re_connection"
 PATH_USER_DB = os.path.join("src", "data", "user.db")
@@ -281,16 +282,22 @@ RE_SETTING_FURNITURES = [
     {"label_vi": "đầy đủ nội thất", "label_en": "full", "value": "full"},
 ]
 RE_SETTING_IMG_DIRS = [
-    {"value": os.path.join("repositories", "products", "re")}]
+    {"value": os.path.join("repositories", "products", "re"), "is_selected": 1}
+]
 RE_SETTING_TEMPLATE_TITLES = [
     {
-        "tid": "T.T.default", "option_id": 1,
-        "value": "[<option>] <icon><icon> cần <option> <category> <price> <unit>, <ward>, <district>, <province> <icon><icon>"
+        "tid": "T.T.default",
+        "option_id": 1,
+        "value": "[<option>] <icon><icon> cần <option> <category> <price> <unit>, <ward>, <district>, <province> <icon><icon>",
     }
 ]
 RE_SETTING_TEMPLATE_DESCRIPTIONS = [
     {
-        "tid": "T.D.default", "option_id": 1,
+        "tid": "T.D.default",
+        "option_id": 1,
         "value": "ID: <PID>\n🗺 Vị trí: đường <street>, <ward>, <district>\n📏 Diện tích: <area>\n🏗 Kết cấu: <structure>\n🛌 Công năng: <function>\n📺 Nội thất: <furniture>\n🚗 Lộ giới: <building_line>\n📜 Pháp lý: <legal>\n<icon><icon> Mô tả:\n<description>\n------------\n💵 Giá: <price><unit>- Thương lượng chính chủ\n\n☎ Liên hệ: 0375.155.525 - Mr. Bình\n🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺\n🌺Ký gửi mua, bán - cho thuê, thuê bất động sản xin liên hệ 0375.155.525 - Mr. Bình🌺\n🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺🌺",
     }
+]
+USER_SETTING_UDD = [
+    {"value": os.path.join("repositories", "users", "user_data_dir"), "is_selected": 1}
 ]
