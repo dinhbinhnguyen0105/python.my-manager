@@ -36,3 +36,5 @@ def db_transaction(db):
         db.rollback()
         logger.error(f"ERROR: {e}")
         yield False
+
+class RE
