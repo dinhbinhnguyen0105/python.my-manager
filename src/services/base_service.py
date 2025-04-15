@@ -116,6 +116,21 @@ class BaseService:
             results.append(record_to_dict(query))
         return results
 
+    @staticmethod
+    def read_all_staticmethod(connection, table_name):
+        db = QSqlDatabase.database(connection)
+        query = QSqlQuery(db)
+        sql = f"SELECT * FROM {table_name}"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return []
+        if not exec_query(db, query):
+            return []
+        results = []
+        while query.next():
+            results.append(record_to_dict(query))
+        return results
+
     @classmethod
     def create(cls, payload):
         db = QSqlDatabase.database(cls.CONNECTION)

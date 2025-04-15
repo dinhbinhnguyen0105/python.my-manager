@@ -1,8 +1,8 @@
 import os
 
-PATH_RE_DB = os.path.join("src", "data", "real_estate.db")
+PATH_RE_DB = os.path.join("src", "repositories", "db", "real_estate.db")
 RE_CONNECTION = "re_connection"
-PATH_USER_DB = os.path.join("src", "data", "user.db")
+PATH_USER_DB = os.path.join("src", "repositories", "db", "user.db")
 USER_CONNECTION = "user_connection"
 
 TABLE_RE = "table_re"
@@ -302,3 +302,23 @@ USER_SETTING_UDD = [
     {"value": os.path.join("repositories", "users",
                            "udd"), "is_selected": 1}
 ]
+
+RE_PRODUCT_INIT_VALUE = {
+    "image_paths": [],
+    "pid": "",
+    "street": "",
+    "status_id": -1,
+    "province_id": -1,
+    "district_id": -1,
+    "ward_id": -1,
+    "option_id": -1,
+    "category_id": -1,
+    "building_line_id": -1,
+    "furniture_id": -1,
+    "legal_id": -1,
+    "area": 0.0,
+    "structure": 0.0,
+    "function": "",
+    "description": "",
+    "price": 0.0,
+}

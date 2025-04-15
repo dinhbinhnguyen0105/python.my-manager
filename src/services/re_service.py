@@ -324,6 +324,12 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
     def is_pid_existed(pid):
         return REProductService.is_value_existed({"pid": pid})
 
+    @staticmethod
+    def get_images(record_id):
+        img_dir_service = REImageDirService()
+        img_dir_record = img_dir_service.get_selected_img_dir()
+        return file_handlers.get_images_in_directory(os.path.abspath(os.path.join(img_dir_record.get("value"), str(record_id))))
+
 
 class REImageDirService(BaseService):
     TABLE_NAME = constants.TABLE_RE_SETTINGS_IMG_DIRS
@@ -365,8 +371,24 @@ class REImageDirService(BaseService):
                 return None
         return True
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_IMG_DIRS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESTemplateTitleService(BaseService):
+
+class RETemplateTitleService(BaseService):
     TABLE_NAME = constants.RE_SETTING_TEMPLATE_TITLES
     CONNECTION = constants.RE_CONNECTION
 
@@ -378,8 +400,24 @@ class RESTemplateTitleService(BaseService):
     def is_tid_existed(cls, tid):
         return cls.is_value_existed({"tid": tid})
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_TEMPLATE_TITLES} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESTemplateDescriptionService(BaseService):
+
+class RETemplateDescriptionService(BaseService):
     TABLE_NAME = constants.RE_SETTING_TEMPLATE_DESCRIPTIONS
     CONNECTION = constants.RE_CONNECTION
 
@@ -391,6 +429,22 @@ class RESTemplateDescriptionService(BaseService):
     def is_tid_existed(cls, tid):
         return cls.is_value_existed({"tid": tid})
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_TEMPLATE_DESCRIPTIONS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
 
 class REStatusService(BaseService):
     TABLE_NAME = constants.RE_SETTING_STATUSES
@@ -400,8 +454,24 @@ class REStatusService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_STATUSES} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESProvinceService(BaseService):
+
+class REProvinceService(BaseService):
     TABLE_NAME = constants.RE_SETTING_PROVINCES
     CONNECTION = constants.RE_CONNECTION
 
@@ -409,8 +479,24 @@ class RESProvinceService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_PROVINCES} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESDistrictService(BaseService):
+
+class REDistrictService(BaseService):
     TABLE_NAME = constants.RE_SETTING_DISTRICTS
     CONNECTION = constants.RE_CONNECTION
 
@@ -418,8 +504,24 @@ class RESDistrictService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESWardsService (BaseService):
+
+class REWardsService (BaseService):
     TABLE_NAME = constants.RE_SETTING_WARDS
     CONNECTION = constants.RE_CONNECTION
 
@@ -427,8 +529,24 @@ class RESWardsService (BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESOptionService(BaseService):
+
+class REOptionService(BaseService):
     TABLE_NAME = constants.RE_SETTING_OPTIONS
     CONNECTION = constants.RE_CONNECTION
 
@@ -436,8 +554,24 @@ class RESOptionService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESCategoryService(BaseService):
+
+class RECategoryService(BaseService):
     TABLE_NAME = constants.RE_SETTING_CATEGORIES
     CONNECTION = constants.RE_CONNECTION
 
@@ -445,8 +579,24 @@ class RESCategoryService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESBuildingLinesService(BaseService):
+
+class REBuildingLinesService(BaseService):
     TABLE_NAME = constants.RE_SETTING_BUILDING_LINES
     CONNECTION = constants.RE_CONNECTION
 
@@ -454,8 +604,24 @@ class RESBuildingLinesService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESLegalsService(BaseService):
+
+class RELegalsService(BaseService):
     TABLE_NAME = constants.RE_SETTING_LEGALS
     CONNECTION = constants.RE_CONNECTION
 
@@ -463,17 +629,301 @@ class RESLegalsService(BaseService):
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.RE_SETTING_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-class RESFurnitureService(BaseService):
-    TABLE_NAME = constants.RE_SETTING_FURNITURES
+
+class RETemplateTitleService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_TITLE
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "tid", "option_id", "value", "created_at", "updated_at"]
+
+    @classmethod
+    def is_tid_existed(cls, tid):
+        return cls.is_value_existed({"tid": tid})
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_TITLE} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class RETemplateDescriptionService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_DESCRIPTION
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "tid", "option_id", "value", "created_at", "updated_at"]
+
+    @classmethod
+    def is_tid_existed(cls, tid):
+        return cls.is_value_existed({"tid": tid})
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DESCRIPTION} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class REStatusService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_STATUSES
     CONNECTION = constants.RE_CONNECTION
 
     @classmethod
     def get_columns(cls):
         return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
 
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_STATUSES} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
 
-if __name__ == "__main__":
-    from PyQt6.QtWidgets import QApplication
-    from src.models.re_database import initialize_re_db
-    app = QApplication([])
+
+class REProvinceService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_PROVINCES
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_PROVINCES} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class REDistrictService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_DISTRICTS
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class REWardsService (BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_WARDS
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class REOptionService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_OPTIONS
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class RECategoryService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_CATEGORIES
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class REBuildingLinesService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_BUILDING_LINES
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class RELegalsService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_LEGALS
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
+
+
+class REFurnitureService(BaseService):
+    TABLE_NAME = constants.TABLE_RE_SETTINGS_FURNITURES
+    CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def get_columns(cls):
+        return ["id", "label_vi", "label_en", "value", "created_at", "updated_at"]
+
+    @staticmethod
+    def is_value_existed(condition):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        key, value = next(iter(condition.items()))
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return False
+        query.bindValue(":value", value)
+        if not exec_query(db, query):
+            return False
+        if query.next():
+            return query.value(0) > 0
+        return False
