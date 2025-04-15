@@ -109,14 +109,16 @@ created_at TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now'))
 def _create_table(table_name, db, sql):
     query = QSqlQuery(db)
     if not query.exec(sql):
-        logger.error(f"Error creating table '{table_name}': {query.lastError().text()}")
+        logger.error(
+            f"Error creating table '{table_name}': {query.lastError().text()}")
         return False
     return True
 
 
 def _seed_data(db: QSqlDatabase, table_name: str, payload: list):
     if not db.transaction():
-        logger.error(f"Failed to start transaction for seeding table '{table_name}'.")
+        logger.error(
+            f"Failed to start transaction for seeding table '{table_name}'.")
         return False
     query = QSqlQuery(db)
 
@@ -164,19 +166,13 @@ def _seed_data(db: QSqlDatabase, table_name: str, payload: list):
                 db.rollback()
                 return False
         else:
-            logger.error(f"Invalid data format for seeding '{table_name}': {row_data}")
+            logger.error(
+                f"Invalid data format for seeding '{table_name}': {row_data}")
             db.rollback()
             return False
     query.clear()
     if not db.commit():
-        logger.error(f"Failed to commit transaction for seeding table '{table_name}'.")
+        logger.error(
+            f"Failed to commit transaction for seeding table '{table_name}'.")
         return False
     return True
-
-
-if __name__ == "__main__":
-    from PyQt6.QtWidgets import QApplication
-
-    app = QApplication([])
-    if initialize_user_db():
-        print("pass!")

@@ -299,5 +299,6 @@ RE_SETTING_TEMPLATE_DESCRIPTIONS = [
     }
 ]
 USER_SETTING_UDD = [
-    {"value": os.path.join("repositories", "users", "user_data_dir"), "is_selected": 1}
+    {"value": os.path.join("repositories", "users",
+                           "udd"), "is_selected": 1}
 ]
