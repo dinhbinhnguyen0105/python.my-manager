@@ -8,8 +8,7 @@ class REProductModel(QSqlRelationalTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTable(constants.TABLE_RE)
-        self.setEditStrategy(
-            QSqlRelationalTableModel.EditStrategy.OnManualSubmit)
+        self.setEditStrategy(QSqlRelationalTableModel.EditStrategy.OnManualSubmit)
         self._column_headers = {
             self.fieldIndex("pid"): "pid".upper(),
             self.fieldIndex("ward_id"): "ward".title(),
@@ -41,18 +40,15 @@ class REProductModel(QSqlRelationalTableModel):
     def _set_relations(self):
         self.setRelation(
             self.fieldIndex("status_id"),
-            QSqlRelation(constants.TABLE_RE_SETTINGS_STATUSES,
-                         "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_STATUSES, "id", "label_vi"),
         )
         self.setRelation(
             self.fieldIndex("province_id"),
-            QSqlRelation(constants.TABLE_RE_SETTINGS_PROVINCES,
-                         "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_PROVINCES, "id", "label_vi"),
         )
         self.setRelation(
             self.fieldIndex("district_id"),
-            QSqlRelation(constants.TABLE_RE_SETTINGS_DISTRICTS,
-                         "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_DISTRICTS, "id", "label_vi"),
         )
         self.setRelation(
             self.fieldIndex("ward_id"),
@@ -60,18 +56,15 @@ class REProductModel(QSqlRelationalTableModel):
         )
         self.setRelation(
             self.fieldIndex("option_id"),
-            QSqlRelation(constants.TABLE_RE_SETTINGS_OPTIONS,
-                         "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_OPTIONS, "id", "label_vi"),
         )
         self.setRelation(
             self.fieldIndex("category_id"),
-            QSqlRelation(constants.TABLE_RE_SETTINGS_CATEGORIES,
-                         "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_CATEGORIES, "id", "label_vi"),
         )
         self.setRelation(
             self.fieldIndex("building_line_id"),
-            QSqlRelation(
-                constants.TABLE_RE_SETTINGS_BUILDING_LINES, "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_BUILDING_LINES, "id", "label_vi"),
         )
         self.setRelation(
             self.fieldIndex("legal_id"),
@@ -79,8 +72,7 @@ class REProductModel(QSqlRelationalTableModel):
         )
         self.setRelation(
             self.fieldIndex("furniture_id"),
-            QSqlRelation(constants.TABLE_RE_SETTINGS_FURNITURES,
-                         "id", "label_vi"),
+            QSqlRelation(constants.TABLE_RE_SETTINGS_FURNITURES, "id", "label_vi"),
         )
 
     def flags(self, index):
@@ -140,7 +132,9 @@ class BaseSettingModel(QSqlTableModel):
         super().__init__(parent)
         self.setTable(table_name)
         self.setEditStrategy(QSqlTableModel.EditStrategy.OnFieldChange)
-        self.select()
+        if not self.select():
+            error_msg = f"Error selecting data from table '{table_name}': {self.lastError().text()}"
+            print(error_msg)
 
     def flags(self, index):
         return (

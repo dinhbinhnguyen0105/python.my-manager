@@ -2,12 +2,13 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox, QDataWidgetMapper
 from src.services.base_service import BaseService
+from src.models.re_model import BaseSettingModel
 
 
 class BaseController(QObject):
     current_record_changed = pyqtSignal(dict)
 
-    def __init__(self, model, service, parent=None):
+    def __init__(self, model: BaseSettingModel, service, parent=None):
         super().__init__(parent)
         self.service = service
         self.model = model
@@ -16,8 +17,7 @@ class BaseController(QObject):
 
     def _initialize_mapper(self):
         self.mapper.setModel(self.model)
-        self.mapper.setSubmitPolicy(
-            QDataWidgetMapper.SubmitPolicy.ManualSubmit)
+        self.mapper.setSubmitPolicy(QDataWidgetMapper.SubmitPolicy.ManualSubmit)
         self.mapper.currentIndexChanged.connect(self._on_current_index_changed)
         self.load_data()
 
@@ -50,8 +50,7 @@ class BaseController(QObject):
                 )
                 return False
         else:
-            QMessageBox.warning(
-                None, "Warning", "Could not submit changes from UI.")
+            QMessageBox.warning(None, "Warning", "Could not submit changes from UI.")
             return False
 
     def create(self, payload):

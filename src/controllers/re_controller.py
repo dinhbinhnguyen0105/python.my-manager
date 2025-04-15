@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from src import constants
 from src.controllers.base_controller import BaseController
+
 # from src.services.re_service import (REProductService, REImageDirService, RETemplateTitleService, RETemplateDescriptionService, REStatusService, REWardsService,
 #                                      REProvinceService, REDistrictService, REOptionService, RECategoryService, REBuildingLinesService, RELegalsService, REFurnitureService, )
 from src.services import re_service
@@ -81,8 +82,7 @@ class REProductController(BaseController):
                 )
                 return True
             else:
-                QMessageBox.warning(
-                    None, "Warning", "Failed to update product.")
+                QMessageBox.warning(None, "Warning", "Failed to update product.")
                 return False
         except Exception as e:
             QMessageBox.critical(None, "Error", str(e))
@@ -97,8 +97,7 @@ class REProductController(BaseController):
                 )
                 return True
             else:
-                QMessageBox.warning(
-                    None, "Warning", "Failed to delete product.")
+                QMessageBox.warning(None, "Warning", "Failed to delete product.")
                 return False
         except Exception as e:
             QMessageBox.critical(None, "Error", str(e))
@@ -134,50 +133,72 @@ class REProductController(BaseController):
 
     def validate_product(self, payload):
         if not payload.get("image_paths"):
-            QMessageBox.critical(
-                None, "Error", "invalid image paths.".capitalize())
+            QMessageBox.critical(None, "Error", "invalid image paths.".capitalize())
             return False
-        if not payload.get("pid") or self.service.is_value_existed({"pid": payload.get("pid")}):
+        if not payload.get("pid") or self.service.is_value_existed(
+            {"pid": payload.get("pid")}
+        ):
             QMessageBox.critical(None, "Error", "invalid pid.".capitalize())
             return False
         if not isinstance(payload.get("area"), (int, float)):
-            QMessageBox.critical(
-                None, "Error", "area must be numbers.".capitalize())
+            QMessageBox.critical(None, "Error", "area must be numbers.".capitalize())
             return False
         if not isinstance(payload.get("structure"), (int, float)):
             QMessageBox.critical(
-                None, "Error", "structure must be numbers.".capitalize())
+                None, "Error", "structure must be numbers.".capitalize()
+            )
             return False
-        if not isinstance(payload.get("price"), (int, float)) or payload.get("price") <= 0:
+        if (
+            not isinstance(payload.get("price"), (int, float))
+            or payload.get("price") <= 0
+        ):
             QMessageBox.critical(
-                None, "Error", "price must be a number and greater than 0.".capitalize())
+                None, "Error", "price must be a number and greater than 0.".capitalize()
+            )
             return False
-        if not re_service.REStatusService.is_value_existed({"id": payload.get("status_id")}):
+        if not re_service.REStatusService.is_value_existed(
+            {"id": payload.get("status_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid status selected.")
             return False
-        if not re_service.REProvinceService.is_value_existed({"id": payload.get("province_id")}):
+        if not re_service.REProvinceService.is_value_existed(
+            {"id": payload.get("province_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid province selected.")
             return False
-        if not re_service.REDistrictService.is_value_existed({"id": payload.get("district_id")}):
+        if not re_service.REDistrictService.is_value_existed(
+            {"id": payload.get("district_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid district selected.")
             return False
-        if not re_service.REWardsService.is_value_existed({"id": payload.get("ward_id")}):
+        if not re_service.REWardsService.is_value_existed(
+            {"id": payload.get("ward_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid ward selected.")
             return False
-        if not re_service.REOptionService.is_value_existed({"id": payload.get("option_id")}):
+        if not re_service.REOptionService.is_value_existed(
+            {"id": payload.get("option_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid option selected.")
             return False
-        if not re_service.RECategoryService.is_value_existed({"id": payload.get("category_id")}):
+        if not re_service.RECategoryService.is_value_existed(
+            {"id": payload.get("category_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid category selected.")
             return False
-        if not re_service.REBuildingLinesService.is_value_existed({"id": payload.get("building_line_id")},):
-            QMessageBox.critical(
-                None, "Error", "Invalid building_line selected.")
+        if not re_service.REBuildingLinesService.is_value_existed(
+            {"id": payload.get("building_line_id")},
+        ):
+            QMessageBox.critical(None, "Error", "Invalid building_line selected.")
             return False
-        if not re_service.REFurnitureService.is_value_existed({"id": payload.get("furniture_id")},):
+        if not re_service.REFurnitureService.is_value_existed(
+            {"id": payload.get("furniture_id")},
+        ):
             QMessageBox.critical(None, "Error", "Invalid furniture selected.")
             return False
-        if not re_service.RELegalsService.is_value_existed({"id": payload.get("legal_id")}):
+        if not re_service.RELegalsService.is_value_existed(
+            {"id": payload.get("legal_id")}
+        ):
             QMessageBox.critical(None, "Error", "Invalid legal selected.")
             return False
 
@@ -213,6 +234,12 @@ class REOptionController(BaseController):
         service = re_service.REOptionService()
         super().__init__(model, service, parent)
 
+    @staticmethod
+    def read_all_staticmethod():
+        return re_service.REOptionService.read_all_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_OPTIONS
+        )
+
 
 class RECategoryController(BaseController):
     def __init__(self, model, parent=None):
@@ -243,11 +270,23 @@ class RETemplateTitleController(BaseController):
         service = re_service.RETemplateTitleService()
         super().__init__(model, service, parent)
 
+    @staticmethod
+    def read_all_staticmethod():
+        return re_service.RETemplateTitleService.read_all_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_TITLE
+        )
+
 
 class RETemplateDescriptionController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.RETemplateDescriptionService()
         super().__init__(model, service, parent)
+
+    @staticmethod
+    def read_all_staticmethod():
+        return re_service.RETemplateDescriptionService.read_all_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_DESCRIPTION
+        )
 
 
 class REImageDirController(BaseController):
