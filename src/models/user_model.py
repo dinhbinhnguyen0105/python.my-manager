@@ -1,11 +1,11 @@
-from PyQt6.QtSql import QSqlTableModel
+from PyQt6.QtSql import QSqlTableModel, QSqlDatabase
 from PyQt6.QtCore import Qt
 from src import constants
 
 
 class BaseUserModel(QSqlTableModel):
     def __init__(self, table_name, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, QSqlDatabase.database(constants.USER_CONNECTION))
         self.setTable(table_name)
         self.setEditStrategy(QSqlTableModel.EditStrategy.OnFieldChange)
         self.select()

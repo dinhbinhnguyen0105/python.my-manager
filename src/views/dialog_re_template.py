@@ -30,7 +30,8 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
             lambda: self.setup_model_and_ui(constants.TABLE_RE_SETTINGS_TITLE)
         )
         self.description_radio.clicked.connect(
-            lambda: self.setup_model_and_ui(constants.TABLE_RE_SETTINGS_DESCRIPTION)
+            lambda: self.setup_model_and_ui(
+                constants.TABLE_RE_SETTINGS_DESCRIPTION)
         )
         self.create_btn.clicked.connect(self.handle_create)
         return True
@@ -51,10 +52,11 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
             self.current_table = constants.TABLE_RE_SETTINGS_DESCRIPTION
             self.title_container.setHidden(True)
             self.description_container.setHidden(False)
-            self.controller = RETemplateDescriptionController(REDescriptionModel())
+            self.controller = RETemplateDescriptionController(
+                REDescriptionModel())
         else:
             raise ValueError(f"Unknown table name: {table_name}")
-        # self.tableView.setModel(self.controller.model)
+        self.tableView.setModel(self.controller.model)
         self.set_table()
         return True
 
@@ -62,9 +64,12 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
         self.tableView.hideColumn(0)
         self.tableView.hideColumn(5)
         self.tableView.setSortingEnabled(True)
-        self.tableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.tableView.customContextMenuRequested.connect(self.show_context_menu)
-        self.tableView.setSelectionBehavior(self.tableView.SelectionBehavior.SelectRows)
+        self.tableView.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tableView.customContextMenuRequested.connect(
+            self.show_context_menu)
+        self.tableView.setSelectionBehavior(
+            self.tableView.SelectionBehavior.SelectRows)
 
     def show_context_menu(self, pos):
         global_pos = self.tableView.mapToGlobal(pos)
@@ -82,7 +87,7 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
                 "option_id": self.options_combobox.currentData(),
                 "value": (
                     self.title_input.text()
-                    if self.current_table == constants.RE_TEMPLATE_TITLE_TABLE
+                    if self.current_table == constants.TABLE_RE_SETTINGS_TITLE
                     else self.description_input.toPlainText()
                 ),
             }
@@ -104,7 +109,8 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
                 for record_id in record_ids:
                     self.controller.delete(record_id)
         else:
-            QMessageBox.warning(self, "Warning", "Please select a row to delete.")
+            QMessageBox.warning(
+                self, "Warning", "Please select a row to delete.")
 
     def get_selected_ids(self):
         selection_model = self.tableView.selectionModel()

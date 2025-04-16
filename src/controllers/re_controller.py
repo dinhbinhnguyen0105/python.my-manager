@@ -5,8 +5,6 @@ from PyQt6.QtWidgets import QMessageBox
 from src import constants
 from src.controllers.base_controller import BaseController
 
-# from src.services.re_service import (REProductService, REImageDirService, RETemplateTitleService, RETemplateDescriptionService, REStatusService, REWardsService,
-#                                      REProvinceService, REDistrictService, REOptionService, RECategoryService, REBuildingLinesService, RELegalsService, REFurnitureService, )
 from src.services import re_service
 
 
@@ -82,7 +80,8 @@ class REProductController(BaseController):
                 )
                 return True
             else:
-                QMessageBox.warning(None, "Warning", "Failed to update product.")
+                QMessageBox.warning(
+                    None, "Warning", "Failed to update product.")
                 return False
         except Exception as e:
             QMessageBox.critical(None, "Error", str(e))
@@ -97,7 +96,8 @@ class REProductController(BaseController):
                 )
                 return True
             else:
-                QMessageBox.warning(None, "Warning", "Failed to delete product.")
+                QMessageBox.warning(
+                    None, "Warning", "Failed to delete product.")
                 return False
         except Exception as e:
             QMessageBox.critical(None, "Error", str(e))
@@ -133,7 +133,8 @@ class REProductController(BaseController):
 
     def validate_product(self, payload):
         if not payload.get("image_paths"):
-            QMessageBox.critical(None, "Error", "invalid image paths.".capitalize())
+            QMessageBox.critical(
+                None, "Error", "invalid image paths.".capitalize())
             return False
         if not payload.get("pid") or self.service.is_value_existed(
             {"pid": payload.get("pid")}
@@ -141,7 +142,8 @@ class REProductController(BaseController):
             QMessageBox.critical(None, "Error", "invalid pid.".capitalize())
             return False
         if not isinstance(payload.get("area"), (int, float)):
-            QMessageBox.critical(None, "Error", "area must be numbers.".capitalize())
+            QMessageBox.critical(
+                None, "Error", "area must be numbers.".capitalize())
             return False
         if not isinstance(payload.get("structure"), (int, float)):
             QMessageBox.critical(
@@ -189,7 +191,8 @@ class REProductController(BaseController):
         if not re_service.REBuildingLinesService.is_value_existed(
             {"id": payload.get("building_line_id")},
         ):
-            QMessageBox.critical(None, "Error", "Invalid building_line selected.")
+            QMessageBox.critical(
+                None, "Error", "Invalid building_line selected.")
             return False
         if not re_service.REFurnitureService.is_value_existed(
             {"id": payload.get("furniture_id")},

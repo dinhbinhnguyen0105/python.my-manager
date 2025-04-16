@@ -2,6 +2,7 @@
 import logging
 import sys
 import os
+import uuid
 from contextlib import contextmanager
 from PyQt6.QtSql import QSqlQuery, QSqlDatabase
 from src import constants
@@ -225,7 +226,8 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
     @staticmethod
     def create(payload):
         db = QSqlDatabase.database(constants.RE_CONNECTION)
-        valid_columns = [k for k in payload if k in REProductService.get_columns()]
+        valid_columns = [
+            k for k in payload if k in REProductService.get_columns()]
         if not valid_columns:
             logger.error("No valid columns provided for create.")
             return False
@@ -347,7 +349,8 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
         img_dir_service = REImageDirService()
         img_dir_record = img_dir_service.get_selected_img_dir()
         return file_handlers.get_images_in_directory(
-            os.path.abspath(os.path.join(img_dir_record.get("value"), str(record_id)))
+            os.path.abspath(os.path.join(
+                img_dir_record.get("value"), str(record_id)))
         )
 
 
@@ -413,6 +416,12 @@ class RETemplateTitleService(BaseService):
     CONNECTION = constants.RE_CONNECTION
 
     @classmethod
+    def create(cls, payload):
+        payload.setdefault("tid", cls.generate_tid())
+        print(payload)
+        return super().create(payload)
+
+    @classmethod
     def get_columns(cls):
         return ["id", "tid", "option_id", "value", "created_at", "updated_at"]
 
@@ -436,10 +445,30 @@ class RETemplateTitleService(BaseService):
             return query.value(0) > 0
         return False
 
+    @classmethod
+    def generate_tid(cls):
+        try:
+            while True:
+                uuid_str = str(uuid.uuid4())
+                tid = "template.title." + uuid_str.replace("-", "")[:8]
+                if not cls.is_value_existed({"pid": tid}):
+                    return tid
+                else:
+                    continue
+        except Exception as e:
+            logger.error(str(e))
+            raise Exception("Failed to generate PID.")
+
 
 class RETemplateDescriptionService(BaseService):
     TABLE_NAME = constants.TABLE_RE_SETTINGS_DESCRIPTION
     CONNECTION = constants.RE_CONNECTION
+
+    @classmethod
+    def create(cls, payload):
+        payload.setdefault("tid", cls.generate_tid())
+        print(payload)
+        return super().create(payload)
 
     @classmethod
     def get_columns(cls):
@@ -464,6 +493,20 @@ class RETemplateDescriptionService(BaseService):
         if query.next():
             return query.value(0) > 0
         return False
+
+    @classmethod
+    def generate_tid(cls):
+        try:
+            while True:
+                uuid_str = str(uuid.uuid4())
+                tid = "template.description." + uuid_str.replace("-", "")[:8]
+                if not cls.is_value_existed({"pid": tid}):
+                    return tid
+                else:
+                    continue
+        except Exception as e:
+            logger.error(str(e))
+            raise Exception("Failed to generate PID.")
 
 
 class REStatusService(BaseService):
