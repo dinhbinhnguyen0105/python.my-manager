@@ -226,8 +226,7 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
     @staticmethod
     def create(payload):
         db = QSqlDatabase.database(constants.RE_CONNECTION)
-        valid_columns = [
-            k for k in payload if k in REProductService.get_columns()]
+        valid_columns = [k for k in payload if k in REProductService.get_columns()]
         if not valid_columns:
             logger.error("No valid columns provided for create.")
             return False
@@ -244,7 +243,7 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
         with db_transaction(db) as ok:
             if not ok:
                 return False
-            img_record = REImageDirService.read({"is_selected": 1})
+            img_record = REImageDirService.get_selected_img_dir()
             if not img_record:
                 logger.error("Image dir path is undefined.")
                 return False
@@ -315,9 +314,10 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
                 return False
             if not exec_query(db, query):
                 return False
-            img_record = REImageDirService.read({"is_selected": 1})
+            img_record = REImageDirService.get_selected_img_dir()
             if not img_record:
                 logger.error("Image dir path is undefined.")
+                db.rollback()
                 return False
             image_dir = os.path.join(img_record.get("value"), str(record_id))
             file_handlers.delete_dir(image_dir)
@@ -349,8 +349,7 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
         img_dir_service = REImageDirService()
         img_dir_record = img_dir_service.get_selected_img_dir()
         return file_handlers.get_images_in_directory(
-            os.path.abspath(os.path.join(
-                img_dir_record.get("value"), str(record_id)))
+            os.path.abspath(os.path.join(img_dir_record.get("value"), str(record_id)))
         )
 
 

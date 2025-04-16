@@ -3,12 +3,13 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox, QDataWidgetMapper
 from src.services.base_service import BaseService
 from src.models.re_model import BaseSettingModel
+from src.services.base_service import BaseService
 
 
 class BaseController(QObject):
     current_record_changed = pyqtSignal(dict)
 
-    def __init__(self, model: BaseSettingModel, service, parent=None):
+    def __init__(self, model: BaseSettingModel, service: BaseService, parent=None):
         super().__init__(parent)
         self.service = service
         self.model = model
@@ -80,6 +81,15 @@ class BaseController(QObject):
             QMessageBox.critical(None, "Error", "Deletion failed.")
             return False
 
+    def delete_multiple(self, record_ids):
+        if self.service.delete_multiple(record_ids):
+            self.load_data()
+            QMessageBox.information(None, "Success", "Deletion successful.")
+            return True
+        else:
+            QMessageBox.critical(None, "Error", "Deletion failed.")
+            return False
+
     def read(self, record_id):
         return self.service.read(record_id)
 
@@ -89,3 +99,7 @@ class BaseController(QObject):
     @staticmethod
     def read_all_staticmethod(connection, table_name):
         return BaseService.read_all_staticmethod(connection, table_name)
+
+    @staticmethod
+    def get_label_vi_staticmethod(connection, table_name, record_id):
+        return BaseService.get_label_vi_staticmethod(connection, table_name, record_id)

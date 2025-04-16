@@ -31,7 +31,7 @@ class UserModel(BaseUserModel):
         super().__init__(constants.TABLE_USER, parent)
 
 
-class UserDataDirModel(BaseUserModel):
+class UserUDDModel(BaseUserModel):
     def __init__(self, parent=None):
         super().__init__(constants.TABLE_USER_SETTINGS_UDD, parent)
 

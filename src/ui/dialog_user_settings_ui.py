@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/python.my-manager.v1/ui/dialog_user_settings.ui'
+# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/pyhon.my-manager/ui/dialog_user_settings.ui'
 #
 # Created by: PyQt6 UI code generator 6.8.1
 #
@@ -144,9 +144,9 @@ class Ui_Dialog_UserSettings(object):
         self.verticalLayout_2.addWidget(self.create_new_btn)
         self.horizontalLayout_6.addLayout(self.verticalLayout_2)
         self.verticalLayout.addWidget(self.fields_container)
-        self.table_view = QtWidgets.QTableView(parent=Dialog_UserSettings)
-        self.table_view.setObjectName("table_view")
-        self.verticalLayout.addWidget(self.table_view)
+        self.tableView = QtWidgets.QTableView(parent=Dialog_UserSettings)
+        self.tableView.setObjectName("tableView")
+        self.verticalLayout.addWidget(self.tableView)
         self.verticalLayout_3.addLayout(self.verticalLayout)
         self.buttonBox = QtWidgets.QDialogButtonBox(parent=Dialog_UserSettings)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel)

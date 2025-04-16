@@ -25,11 +25,14 @@ base_settings_tables_data = {
     constants.TABLE_RE_SETTINGS_BUILDING_LINES: constants.RE_SETTING_BUILDING_LINES,
     constants.TABLE_RE_SETTINGS_FURNITURES: constants.RE_SETTING_FURNITURES,
     constants.TABLE_RE_SETTINGS_LEGALS: constants.RE_SETTING_LEGALS,
-    constants.TABLE_RE_SETTINGS_IMG_DIRS: constants.RE_SETTING_IMG_DIRS,
+    # constants.TABLE_RE_SETTINGS_IMG_DIRS: constants.RE_SETTING_IMG_DIRS,
 }
 templates_tables_data = {
     constants.TABLE_RE_SETTINGS_TITLE: constants.RE_SETTING_TEMPLATE_TITLES,
     constants.TABLE_RE_SETTINGS_DESCRIPTION: constants.RE_SETTING_TEMPLATE_DESCRIPTIONS,
+}
+img_dir_tables_data = {
+    constants.TABLE_RE_SETTINGS_IMG_DIRS: constants.RE_SETTING_IMG_DIRS
 }
 
 
@@ -102,7 +105,6 @@ def _create_tables(db):
         if not _create_table(constants.TABLE_RE_SETTINGS_IMG_DIRS, db, image_dir_sql):
             db.rollback()
             return False
-
         product_sql = f"""
     CREATE TABLE IF NOT EXISTS {constants.TABLE_RE} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,13 +158,15 @@ def _seed_initial_data(db: QSqlDatabase):
     for table_name, data_list in templates_tables_data.items():
         if not _seed_data(db, table_name, data_list):
             return False
+    for table_name, data_list in img_dir_tables_data.items():
+        if not _seed_data(db, table_name, data_list):
+            return False
     return True
 
 
 def _seed_data(db: QSqlDatabase, table_name: str, payload: list):
     if not db.transaction():
-        logger.error(
-            f"Failed to start transaction for seeding table '{table_name}'.")
+        logger.error(f"Failed to start transaction for seeding table '{table_name}'.")
         return False
     query = QSqlQuery(db)
 
@@ -211,15 +215,13 @@ def _seed_data(db: QSqlDatabase, table_name: str, payload: list):
                 db.rollback()
                 return False
         else:
-            logger.error(
-                f"Invalid data format for seeding '{table_name}': {row_data}")
+            logger.error(f"Invalid data format for seeding '{table_name}': {row_data}")
             db.rollback()
             return False
     # query.clear()
     # Chuyển commit ra khỏi vòng lặp dữ liệu
     if not db.commit():
-        logger.error(
-            f"Failed to commit transaction for seeding table '{table_name}'.")
+        logger.error(f"Failed to commit transaction for seeding table '{table_name}'.")
         return False
     return True
 
@@ -227,7 +229,6 @@ def _seed_data(db: QSqlDatabase, table_name: str, payload: list):
 def _create_table(table_name, db, sql):
     query = QSqlQuery(db)
     if not query.exec(sql):
-        logger.error(
-            f"Error creating table '{table_name}': {query.lastError().text()}")
+        logger.error(f"Error creating table '{table_name}': {query.lastError().text()}")
         return False
     return True

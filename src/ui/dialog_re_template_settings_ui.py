@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/python.my-manager.v1/ui/dialog_re_template_settings.ui'
+# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/pyhon.my-manager/ui/dialog_re_template_settings.ui'
 #
 # Created by: PyQt6 UI code generator 6.8.1
 #
@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Dialog_RETemplateSettings(object):
     def setupUi(self, Dialog_RETemplateSettings):
         Dialog_RETemplateSettings.setObjectName("Dialog_RETemplateSettings")
-        Dialog_RETemplateSettings.resize(480, 443)
+        Dialog_RETemplateSettings.resize(480, 453)
         Dialog_RETemplateSettings.setStyleSheet("#Dialog_RETemplateSettings{\n"
 "  font-family: \"Courier New\";\n"
 "  background-color: #FFFFFF;\n"
@@ -32,6 +32,7 @@ class Ui_Dialog_RETemplateSettings(object):
 "  color:#212529;\n"
 "}\n"
 "QPlainTextEdit {\n"
+"    margin-top: 12px;\n"
 "    background-color: #FFFFFF;\n"
 "  color:#212529;\n"
 "}\n"
@@ -57,13 +58,13 @@ class Ui_Dialog_RETemplateSettings(object):
 "")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(Dialog_RETemplateSettings)
         self.verticalLayout_7.setContentsMargins(8, 8, 8, 8)
-        self.verticalLayout_7.setSpacing(0)
+        self.verticalLayout_7.setSpacing(8)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.dialog_container = QtWidgets.QWidget(parent=Dialog_RETemplateSettings)
         self.dialog_container.setObjectName("dialog_container")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.dialog_container)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_6.setSpacing(0)
+        self.verticalLayout_6.setSpacing(8)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setSpacing(0)
@@ -92,6 +93,9 @@ class Ui_Dialog_RETemplateSettings(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setSpacing(0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.options_combobox = QtWidgets.QComboBox(parent=self.description_container)
+        self.options_combobox.setObjectName("options_combobox")
+        self.verticalLayout_4.addWidget(self.options_combobox)
         self.description_label = QtWidgets.QLabel(parent=self.description_container)
         self.description_label.setObjectName("description_label")
         self.verticalLayout_4.addWidget(self.description_label)
@@ -118,29 +122,18 @@ class Ui_Dialog_RETemplateSettings(object):
         self.verticalLayout.addWidget(self.title_input)
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.verticalLayout_5.addWidget(self.title_container)
-        self.button_container = QtWidgets.QGroupBox(parent=self.dialog_container)
-        self.button_container.setTitle("")
-        self.button_container.setObjectName("button_container")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.button_container)
-        self.horizontalLayout_4.setContentsMargins(8, 8, 8, 8)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setObjectName("gridLayout")
-        self.create_btn = QtWidgets.QPushButton(parent=self.button_container)
+        self.create_btn = QtWidgets.QPushButton(parent=self.dialog_container)
+        self.create_btn.setStyleSheet("")
         self.create_btn.setObjectName("create_btn")
-        self.gridLayout.addWidget(self.create_btn, 1, 0, 1, 1)
-        self.delete_btn = QtWidgets.QPushButton(parent=self.button_container)
-        self.delete_btn.setEnabled(True)
-        self.delete_btn.setObjectName("delete_btn")
-        self.gridLayout.addWidget(self.delete_btn, 1, 1, 1, 1)
-        self.options_combobox = QtWidgets.QComboBox(parent=self.button_container)
-        self.options_combobox.setObjectName("options_combobox")
-        self.gridLayout.addWidget(self.options_combobox, 0, 0, 1, 2)
-        self.horizontalLayout_4.addLayout(self.gridLayout)
-        self.verticalLayout_5.addWidget(self.button_container)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
-        self.verticalLayout_5.addItem(spacerItem)
+        self.verticalLayout_5.addWidget(self.create_btn)
+        self.line = QtWidgets.QFrame(parent=self.dialog_container)
+        self.line.setStyleSheet("")
+        self.line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.line.setObjectName("line")
+        self.verticalLayout_5.addWidget(self.line)
         self.tableView = QtWidgets.QTableView(parent=self.dialog_container)
+        self.tableView.setStyleSheet("")
         self.tableView.setObjectName("tableView")
         self.verticalLayout_5.addWidget(self.tableView)
         self.verticalLayout_6.addLayout(self.verticalLayout_5)
@@ -165,4 +158,3 @@ class Ui_Dialog_RETemplateSettings(object):
         self.description_label.setText(_translate("Dialog_RETemplateSettings", " Description"))
         self.title_label.setText(_translate("Dialog_RETemplateSettings", "Title"))
         self.create_btn.setText(_translate("Dialog_RETemplateSettings", "Add new"))
-        self.delete_btn.setText(_translate("Dialog_RETemplateSettings", "Delete"))

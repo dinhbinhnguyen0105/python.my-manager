@@ -1,4 +1,4 @@
-# src/views/dialog_re_template.py
+# src/views/re/dialog_re_template.py
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QMessageBox, QMenu
 from PyQt6.QtGui import QAction
@@ -30,8 +30,7 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
             lambda: self.setup_model_and_ui(constants.TABLE_RE_SETTINGS_TITLE)
         )
         self.description_radio.clicked.connect(
-            lambda: self.setup_model_and_ui(
-                constants.TABLE_RE_SETTINGS_DESCRIPTION)
+            lambda: self.setup_model_and_ui(constants.TABLE_RE_SETTINGS_DESCRIPTION)
         )
         self.create_btn.clicked.connect(self.handle_create)
         return True
@@ -45,17 +44,20 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
             )
         if table_name == constants.TABLE_RE_SETTINGS_TITLE:
             self.current_table = constants.TABLE_RE_SETTINGS_TITLE
-            self.title_container.setHidden(False)
-            self.description_container.setHidden(True)
+            # self.title_container.setHidden(False)
+            # self.description_container.setHidden(True)
             self.controller = RETemplateTitleController(RETitleModel())
         elif table_name == constants.TABLE_RE_SETTINGS_DESCRIPTION:
             self.current_table = constants.TABLE_RE_SETTINGS_DESCRIPTION
-            self.title_container.setHidden(True)
-            self.description_container.setHidden(False)
-            self.controller = RETemplateDescriptionController(
-                REDescriptionModel())
+            # self.title_container.setHidden(True)
+            # self.description_container.setHidden(False)
+            self.controller = RETemplateDescriptionController(REDescriptionModel())
         else:
             raise ValueError(f"Unknown table name: {table_name}")
+        self.title_container.setHidden(table_name != constants.TABLE_RE_SETTINGS_TITLE)
+        self.description_container.setHidden(
+            table_name != constants.TABLE_RE_SETTINGS_DESCRIPTION
+        )
         self.tableView.setModel(self.controller.model)
         self.set_table()
         return True
@@ -64,20 +66,17 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
         self.tableView.hideColumn(0)
         self.tableView.hideColumn(5)
         self.tableView.setSortingEnabled(True)
-        self.tableView.setContextMenuPolicy(
-            Qt.ContextMenuPolicy.CustomContextMenu)
-        self.tableView.customContextMenuRequested.connect(
-            self.show_context_menu)
-        self.tableView.setSelectionBehavior(
-            self.tableView.SelectionBehavior.SelectRows)
+        self.tableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tableView.customContextMenuRequested.connect(self.show_context_menu)
+        self.tableView.setSelectionBehavior(self.tableView.SelectionBehavior.SelectRows)
 
     def show_context_menu(self, pos):
         global_pos = self.tableView.mapToGlobal(pos)
         menu = QMenu(self.tableView)
-        delete_aciton = QAction("Delete", self)
-        menu.addAction(delete_aciton)
+        delete_action = QAction("Delete", self)
+        menu.addAction(delete_action)
         menu.popup(global_pos)
-        delete_aciton.triggered.connect(self.handle_delete)
+        delete_action.triggered.connect(self.handle_delete)
 
     def handle_create(self):
         if not self.controller or not self.current_table:
@@ -109,8 +108,7 @@ class DialogRETemplateSetting(QDialog, Ui_Dialog_RETemplateSettings):
                 for record_id in record_ids:
                     self.controller.delete(record_id)
         else:
-            QMessageBox.warning(
-                self, "Warning", "Please select a row to delete.")
+            QMessageBox.warning(self, "Warning", "Please select a row to delete.")
 
     def get_selected_ids(self):
         selection_model = self.tableView.selectionModel()

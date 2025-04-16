@@ -1,7 +1,7 @@
 # src/controllers/re_controller.py
 import uuid
-from PyQt6.QtWidgets import QMessageBox
-
+from PyQt6.QtWidgets import QMessageBox, QDataWidgetMapper
+from PyQt6.QtCore import QSortFilterProxyModel
 from src import constants
 from src.controllers.base_controller import BaseController
 
@@ -80,8 +80,7 @@ class REProductController(BaseController):
                 )
                 return True
             else:
-                QMessageBox.warning(
-                    None, "Warning", "Failed to update product.")
+                QMessageBox.warning(None, "Warning", "Failed to update product.")
                 return False
         except Exception as e:
             QMessageBox.critical(None, "Error", str(e))
@@ -96,8 +95,7 @@ class REProductController(BaseController):
                 )
                 return True
             else:
-                QMessageBox.warning(
-                    None, "Warning", "Failed to delete product.")
+                QMessageBox.warning(None, "Warning", "Failed to delete product.")
                 return False
         except Exception as e:
             QMessageBox.critical(None, "Error", str(e))
@@ -133,31 +131,47 @@ class REProductController(BaseController):
 
     def validate_product(self, payload):
         if not payload.get("image_paths"):
-            QMessageBox.critical(
-                None, "Error", "invalid image paths.".capitalize())
+            QMessageBox.critical(None, "Error", "invalid image paths.".capitalize())
             return False
         if not payload.get("pid") or self.service.is_value_existed(
             {"pid": payload.get("pid")}
         ):
             QMessageBox.critical(None, "Error", "invalid pid.".capitalize())
             return False
-        if not isinstance(payload.get("area"), (int, float)):
-            QMessageBox.critical(
-                None, "Error", "area must be numbers.".capitalize())
+        area_value = payload.get("area")
+        try:
+            payload["area"] = float(area_value)
+        except:
+            QMessageBox.critical(None, "Error", "area must be numbers.".capitalize())
             return False
-        if not isinstance(payload.get("structure"), (int, float)):
-            QMessageBox.critical(
-                None, "Error", "structure must be numbers.".capitalize()
-            )
+        structure_value = payload.get("structure")
+        try:
+            payload["structure"] = float(structure_value)
+            if payload["structure"] < 1:
+                QMessageBox.critical(
+                    None,
+                    "Error",
+                    "structure must be a number and greater than 0.".capitalize(),
+                )
+                return False
+
+        except:
+            QMessageBox.critical(None, "Error", "area must be numbers.".capitalize())
             return False
-        if (
-            not isinstance(payload.get("price"), (int, float))
-            or payload.get("price") <= 0
-        ):
-            QMessageBox.critical(
-                None, "Error", "price must be a number and greater than 0.".capitalize()
-            )
+        price_value = payload.get("price")
+        try:
+            payload["price"] = float(price_value)
+            if payload["price"] < 1:
+                QMessageBox.critical(
+                    None,
+                    "Error",
+                    "price must be a number and greater than 0.".capitalize(),
+                )
+                return False
+        except:
+            QMessageBox.critical(None, "Error", "area must be numbers.".capitalize())
             return False
+
         if not re_service.REStatusService.is_value_existed(
             {"id": payload.get("status_id")}
         ):
@@ -191,8 +205,7 @@ class REProductController(BaseController):
         if not re_service.REBuildingLinesService.is_value_existed(
             {"id": payload.get("building_line_id")},
         ):
-            QMessageBox.critical(
-                None, "Error", "Invalid building_line selected.")
+            QMessageBox.critical(None, "Error", "Invalid building_line selected.")
             return False
         if not re_service.REFurnitureService.is_value_existed(
             {"id": payload.get("furniture_id")},
@@ -213,11 +226,23 @@ class REStatusController(BaseController):
         service = re_service.REStatusService()
         super().__init__(model, service, parent)
 
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_STATUSES, record_id
+        )
+
 
 class REProvinceController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.REProvinceService()
         super().__init__(model, service, parent)
+
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_PROVINCES, record_id
+        )
 
 
 class REDistrictController(BaseController):
@@ -225,11 +250,23 @@ class REDistrictController(BaseController):
         service = re_service.REDistrictService()
         super().__init__(model, service, parent)
 
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_DISTRICTS, record_id
+        )
+
 
 class REWardsController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.REWardsService()
         super().__init__(model, service, parent)
+
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_WARDS, record_id
+        )
 
 
 class REOptionController(BaseController):
@@ -243,29 +280,61 @@ class REOptionController(BaseController):
             constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_OPTIONS
         )
 
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_OPTIONS, record_id
+        )
+
 
 class RECategoryController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.RECategoryService()
         super().__init__(model, service, parent)
 
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_CATEGORIES, record_id
+        )
 
-class REBuildingLinesController(BaseController):
+
+class REBuildingLineController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.REBuildingLinesService()
         super().__init__(model, service, parent)
 
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION,
+            constants.TABLE_RE_SETTINGS_BUILDING_LINES,
+            record_id,
+        )
 
-class RELegalsController(BaseController):
+
+class RELegalController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.RELegalsService()
         super().__init__(model, service, parent)
+
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_LEGALS, record_id
+        )
 
 
 class REFurnitureController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.REFurnitureService()
         super().__init__(model, service, parent)
+
+    @classmethod
+    def get_label_vi_staticmethod(cls, record_id):
+        return super().get_label_vi_staticmethod(
+            constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_FURNITURES, record_id
+        )
 
 
 class RETemplateTitleController(BaseController):
@@ -278,6 +347,9 @@ class RETemplateTitleController(BaseController):
         return re_service.RETemplateTitleService.read_all_staticmethod(
             constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_TITLE
         )
+    
+    @staticmethod
+    def get_random_template()
 
 
 class RETemplateDescriptionController(BaseController):

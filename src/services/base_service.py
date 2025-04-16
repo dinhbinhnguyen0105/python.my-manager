@@ -84,7 +84,8 @@ class BaseService:
     @classmethod
     def get_columns(cls):
         raise NotImplementedError(
-            "The get_columns() method has not been implemented for the subclass.")
+            "The get_columns() method has not been implemented for the subclass."
+        )
 
     @classmethod
     def read(cls, record_id):
@@ -157,15 +158,18 @@ class BaseService:
     @classmethod
     def update(cls, record_id, payload):
         db = QSqlDatabase.database(cls.CONNECTION)
-        valid_columns = [col for col in cls.get_columns(
-        ) if col != "id" and col in payload]
+        valid_columns = [
+            col for col in cls.get_columns() if col != "id" and col in payload
+        ]
         if not valid_columns:
             logger.error("No valid columns provided for update.")
             return False
         set_clause = ", ".join([f"{col} = :{col}" for col in valid_columns])
-        sql = (f"UPDATE {cls.TABLE_NAME} SET {set_clause}, "
-               "updated_at = (strftime('%Y-%m-%d %H:%M:%S', 'now')) "
-               "WHERE id = :id")
+        sql = (
+            f"UPDATE {cls.TABLE_NAME} SET {set_clause}, "
+            "updated_at = (strftime('%Y-%m-%d %H:%M:%S', 'now')) "
+            "WHERE id = :id"
+        )
         query = QSqlQuery(db)
         if not query.prepare(sql):
             logger.error(query.lastError().text())
@@ -236,3 +240,32 @@ class BaseService:
         if query.next():
             return query.value(0) > 0
         return False
+
+    @staticmethod
+    def get_label_vi_staticmethod(connection, table_name, record_id):
+        db = QSqlDatabase.database(connection)
+        query = QSqlQuery(db)
+        sql = f"SELECT label_vi FROM {table_name} WHERE id = {record_id}"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return None
+        if not exec_query(db, query):
+            return None
+        if query.next():
+            return query.value(0)
+        return None
+
+
+# def read_all_staticmethod(connection, table_name):
+# db = QSqlDatabase.database(connection)
+# query = QSqlQuery(db)
+# sql = f"SELECT * FROM {table_name}"
+# if not query.prepare(sql):
+#     logger.error(query.lastError().text())
+#     return []
+# if not exec_query(db, query):
+#     return []
+# results = []
+# while query.next():
+#     results.append(record_to_dict(query))
+# return results
