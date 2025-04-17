@@ -21,7 +21,6 @@ class REProductController(BaseController):
         payload.setdefault("street", "")
         payload.setdefault("description", "")
         payload.setdefault("price", 0.0)
-
         try:
             if not self.validate_product(payload):
                 return False
@@ -71,7 +70,7 @@ class REProductController(BaseController):
         payload.setdefault("description", "")
         payload.setdefault("price", 0.0)
         try:
-            if not self.validate_product(payload):
+            if not self.validate_product(payload=payload):
                 return False
             if self.service.update(record_id, payload):
                 self.load_data()
@@ -133,11 +132,14 @@ class REProductController(BaseController):
         if not payload.get("image_paths"):
             QMessageBox.critical(None, "Error", "invalid image paths.".capitalize())
             return False
-        if not payload.get("pid") or self.service.is_value_existed(
-            {"pid": payload.get("pid")}
-        ):
-            QMessageBox.critical(None, "Error", "invalid pid.".capitalize())
-            return False
+        # print("is_create", is_create)
+        # if is_create:
+        #     if not payload.get("pid") or self.service.is_value_existed(
+        #         {"pid": payload.get("pid")}
+        #     ):
+        #         QMessageBox.critical(None, "Error", "invalid pid.".capitalize())
+        #         return False
+
         area_value = payload.get("area")
         try:
             payload["area"] = float(area_value)
@@ -347,9 +349,14 @@ class RETemplateTitleController(BaseController):
         return re_service.RETemplateTitleService.read_all_staticmethod(
             constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_TITLE
         )
-    
+
     @staticmethod
-    def get_random_template()
+    def get_random_template(option_id):
+        return re_service.RETemplateTitleService.get_random_template(option_id)
+
+    @staticmethod
+    def get_default_template():
+        return re_service.RETemplateTitleService.get_default_template()
 
 
 class RETemplateDescriptionController(BaseController):
@@ -362,6 +369,14 @@ class RETemplateDescriptionController(BaseController):
         return re_service.RETemplateDescriptionService.read_all_staticmethod(
             constants.RE_CONNECTION, constants.TABLE_RE_SETTINGS_DESCRIPTION
         )
+
+    @staticmethod
+    def get_random_template(option_id):
+        return re_service.RETemplateDescriptionService.get_random_template(option_id)
+
+    @staticmethod
+    def get_default_template():
+        return re_service.RETemplateDescriptionService.get_default_template()
 
 
 class REImageDirController(BaseController):

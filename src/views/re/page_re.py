@@ -5,6 +5,11 @@ from PyQt6.QtCore import Qt, QPoint, QSortFilterProxyModel, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox, QWidget, QMenu, QDialog
 
 from src import constants
+from src.utils.re_product_handler import (
+    replace_keywords,
+    init_footer,
+    open_file_explorer,
+)
 from src.models.re_model import REProductModel
 from src.controllers import re_controller
 from src.controllers.base_controller import BaseController
@@ -28,6 +33,7 @@ class PageRE(QWidget, Ui_PageRE):
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.source_model)
         self.product_controller = re_controller.REProductController(self.source_model)
+        self.img_paths = None
 
         self.setup_ui()
         self.setup_events()
@@ -38,8 +44,11 @@ class PageRE(QWidget, Ui_PageRE):
         self.set_table()
 
     def setup_events(self):
-
+        self.products_table.selectionModel().selectionChanged.connect(
+            self.handle_set_default
+        )
         self.action_create_btn.clicked.connect(self.handle_create)
+        self.image_label.mousePressEvent = self.image_label_click_event
 
     def setup_filters(self):
         self.pid_input.textChanged.connect(
@@ -214,21 +223,27 @@ class PageRE(QWidget, Ui_PageRE):
             self.product_controller.create(create_dialog.fields)
 
     def handle_edit(self):
-        id = self.get_selected_ids()[0]
-        if id:
-            current_product = self.product_controller.read(id, True)
-            image_path = self.product_controller.get_images(id)
+        record_ids = self.get_selected_ids()
+        if not record_ids:
+            return
+        record_id = record_ids[0]
+        if record_id:
+            current_product = self.product_controller.read(record_id, True)
+            image_path = self.product_controller.get_images(record_id)
             current_product["image_paths"] = image_path
             edit_dialog = DialogREProduct(current_product)
             edit_dialog.setWindowTitle("Edit Product")
             edit_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
             edit_dialog.setFixedSize(edit_dialog.size())
             if edit_dialog.exec() == QDialog.DialogCode.Accepted:
-                self.product_controller.create(edit_dialog.fields)
+                self.product_controller.update(record_id, edit_dialog.fields)
 
     def handle_delete(self):
-        id = self.get_selected_ids()[0]
-        if id:
+        record_ids = self.get_selected_ids()
+        if not record_ids:
+            return
+        record_id = record_ids[0]
+        if record_id:
             reply = QMessageBox.question(
                 self,
                 "Confirmation",
@@ -237,13 +252,57 @@ class PageRE(QWidget, Ui_PageRE):
                 QMessageBox.StandardButton.No,
             )
             if reply == QMessageBox.StandardButton.Yes:
-                if id is not None:
-                    self.product_controller.delete(id)
+                if record_id is not None:
+                    self.product_controller.delete(record_id)
                 else:
                     QMessageBox.warning(self, "Warning", "No product selected.")
             else:
                 # User clicked No, do nothing
                 pass
+
+    def handle_set_default(self):
+        record_ids = self.get_selected_ids()
+        if not record_ids:
+            return
+        record_id = record_ids[0]
+        if not record_id:
+            return
+        record_data = self.product_controller.read(record_id, False)
+        self.img_paths = self.product_controller.get_images(record_id)
+        title_template = re_controller.RETemplateTitleController.get_default_template()
+        description_template = (
+            re_controller.RETemplateDescriptionController.get_default_template()
+        )
+
+        self.detail_text.setPlainText(
+            replace_keywords(record_data, title_template).upper()
+            + "\n"
+            + replace_keywords(record_data, description_template)
+            + "\n"
+            + init_footer(record_data.get("pid"), record_data.get("updated_at"))
+        )
+        if len(self.img_paths):
+            self.display_image(self.img_paths[0])
+
+    def display_image(self, image_path):
+        pixmap = QPixmap(image_path)
+        if not pixmap.isNull():
+            self.image_label.setPixmap(
+                pixmap.scaled(
+                    self.image_label.size(),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        else:
+            self.image_label.setText("Failed to load image.")
+
+    def image_label_click_event(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            # self.image_clicked.emit()
+            if self.img_paths:
+                open_file_explorer(self.img_paths[0])
+        super().mousePressEvent(event)
 
 
 if __name__ == "__main__":

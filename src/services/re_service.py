@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from PyQt6.QtSql import QSqlQuery, QSqlDatabase
 from src import constants
 from src.services.base_service import BaseService
-from src.utils import file_handlers
+from src.utils import file_handler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -265,7 +265,7 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
 
             image_paths = payload.get("image_paths")
             image_dir = os.path.join(img_record.get("value"), str(current_id))
-            if not file_handlers.copy_files(image_paths, image_dir, current_id):
+            if not file_handler.copy_files(image_paths, image_dir, current_id):
                 return False
 
         return True
@@ -320,7 +320,7 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
                 db.rollback()
                 return False
             image_dir = os.path.join(img_record.get("value"), str(record_id))
-            file_handlers.delete_dir(image_dir)
+            file_handler.delete_dir(image_dir)
             is_affected(query)
         return True
 
@@ -348,7 +348,7 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
     def get_images(record_id):
         img_dir_service = REImageDirService()
         img_dir_record = img_dir_service.get_selected_img_dir()
-        return file_handlers.get_images_in_directory(
+        return file_handler.get_images_in_directory(
             os.path.abspath(os.path.join(img_dir_record.get("value"), str(record_id)))
         )
 
@@ -417,7 +417,6 @@ class RETemplateTitleService(BaseService):
     @classmethod
     def create(cls, payload):
         payload.setdefault("tid", cls.generate_tid())
-        print(payload)
         return super().create(payload)
 
     @classmethod
@@ -457,6 +456,34 @@ class RETemplateTitleService(BaseService):
         except Exception as e:
             logger.error(str(e))
             raise Exception("Failed to generate PID.")
+
+    @staticmethod
+    def get_random_template(option_id):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        sql = f"SELECT value FROM {constants.TABLE_RE_SETTINGS_TITLE} WHERE option_id = {option_id} ORDER BY RANDOM() LIMIT 1"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return None
+        if not exec_query(db, query):
+            return None
+        if query.next():
+            return query.value(0)
+        return None
+
+    @staticmethod
+    def get_default_template():
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        sql = f"SELECT value FROM {constants.TABLE_RE_SETTINGS_TITLE} WHERE id = 1"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return None
+        if not exec_query(db, query):
+            return None
+        if query.next():
+            return query.value(0)
+        return None
 
 
 class RETemplateDescriptionService(BaseService):
@@ -506,6 +533,36 @@ class RETemplateDescriptionService(BaseService):
         except Exception as e:
             logger.error(str(e))
             raise Exception("Failed to generate PID.")
+
+    @staticmethod
+    def get_random_template(option_id):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        sql = f"SELECT value FROM {constants.TABLE_RE_SETTINGS_DESCRIPTION} WHERE option_id = {option_id} ORDER BY RANDOM() LIMIT 1"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return None
+        if not exec_query(db, query):
+            return None
+        if query.next():
+            return query.value(0)
+        return None
+
+    @staticmethod
+    def get_default_template():
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        sql = (
+            f"SELECT value FROM {constants.TABLE_RE_SETTINGS_DESCRIPTION} WHERE id = 1"
+        )
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return None
+        if not exec_query(db, query):
+            return None
+        if query.next():
+            return query.value(0)
+        return None
 
 
 class REStatusService(BaseService):

@@ -18,7 +18,6 @@ class DialogREProduct(QDialog, Ui_Dialog_REProduct):
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self.fields = payload
-        print(self.fields)
         self.provinces_combobox.setDisabled(True)
         self.districts_combobox.setDisabled(True)
         self.product_model = REProductModel()

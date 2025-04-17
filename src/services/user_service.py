@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from fake_useragent import UserAgent
 from PyQt6.QtSql import QSqlQuery, QSqlDatabase
 from src import constants
-from src.utils import file_handlers
+from src.utils import file_handler
 from src.services.base_service import BaseService
 
 
@@ -88,7 +88,22 @@ class UserService:
     @staticmethod
     def get_columns():
         return [
-            "id", "status", "uid", "username", "password", "two_fa", "email", "email_password", "phone_number", "note", "type", "user_group", "mobile_ua", "desktop_ua", "created_at", "updated_at",
+            "id",
+            "status",
+            "uid",
+            "username",
+            "password",
+            "two_fa",
+            "email",
+            "email_password",
+            "phone_number",
+            "note",
+            "type",
+            "user_group",
+            "mobile_ua",
+            "desktop_ua",
+            "created_at",
+            "updated_at",
         ]
 
     @staticmethod
@@ -124,15 +139,16 @@ class UserService:
     @staticmethod
     def create(payload):
         db = QSqlDatabase.database(constants.USER_CONNECTION)
-        valid_columns = [
-            col for col in UserService.get_columns() if col in payload]
+        valid_columns = [col for col in UserService.get_columns() if col in payload]
         if not valid_columns:
             logger.error("No valid columns provided for create.")
             return False
         ua_desktop_controller = UserAgent(
-            os="Mac OS X",)
+            os="Mac OS X",
+        )
         ua_mobile_controller = UserAgent(
-            os="iOS",)
+            os="iOS",
+        )
         payload.setdefault("mobile_ua", ua_mobile_controller.random)
         payload.setdefault("desktop_ua", ua_desktop_controller.random)
 
@@ -155,15 +171,18 @@ class UserService:
     @staticmethod
     def update(record_id, payload):
         db = QSqlDatabase.database(constants.USER_CONNECTION)
-        valid_columns = [col for col in UserService.get_columns(
-        ) if col != "id" and col in payload]
+        valid_columns = [
+            col for col in UserService.get_columns() if col != "id" and col in payload
+        ]
         if not valid_columns:
             logger.error("No valid columns provided for update.")
             return False
         set_clause = ", ".join([f"{col} = :{col}" for col in valid_columns])
-        sql = (f"UPDATE {constants.TABLE_USER} SET {set_clause}, "
-               "updated_at = (strftime('%Y-%m-%d %H:%M:%S', 'now')) "
-               "WHERE id = :id")
+        sql = (
+            f"UPDATE {constants.TABLE_USER} SET {set_clause}, "
+            "updated_at = (strftime('%Y-%m-%d %H:%M:%S', 'now')) "
+            "WHERE id = :id"
+        )
         query = QSqlQuery(db)
         if not query.prepare(sql):
             logger.error(query.lastError().text())
@@ -193,8 +212,9 @@ class UserService:
             if not exec_query(db, query):
                 return False
         udd_container_dir = UserUDDService.get_selected_udd()
-        file_handlers.delete_dir(os.path.join(
-            udd_container_dir.get("value"), str(record_id)))
+        file_handler.delete_dir(
+            os.path.join(udd_container_dir.get("value"), str(record_id))
+        )
         return True
 
     @staticmethod
@@ -220,7 +240,13 @@ class UserUDDService(BaseService):
 
     @classmethod
     def get_columns(cls):
-        return ["id", "value", "is_selected", "updated_at", "created_at",]
+        return [
+            "id",
+            "value",
+            "is_selected",
+            "updated_at",
+            "created_at",
+        ]
 
     @classmethod
     def get_selected_udd(cls):
@@ -261,4 +287,9 @@ class UserProxyService(BaseService):
 
     @classmethod
     def get_columns(cls):
-        return ["id", "value", "updated_at", "created_at",]
+        return [
+            "id",
+            "value",
+            "updated_at",
+            "created_at",
+        ]
