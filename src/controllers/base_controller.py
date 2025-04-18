@@ -3,13 +3,12 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox, QDataWidgetMapper
 from src.services.base_service import BaseService
 from src.models.re_model import BaseSettingModel
-from src.services.base_service import BaseService
 
 
 class BaseController(QObject):
     current_record_changed = pyqtSignal(dict)
 
-    def __init__(self, model: BaseSettingModel, service: BaseService, parent=None):
+    def __init__(self, model: BaseSettingModel, service, parent=None):
         super().__init__(parent)
         self.service = service
         self.model = model
