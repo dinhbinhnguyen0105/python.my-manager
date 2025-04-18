@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/python.my-manager.v1/ui/mainwindow.ui'
+# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/pyhon.my-manager/ui/mainwindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.8.1
 #
@@ -12,7 +12,8 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1200, 600)
+        # MainWindow.resize(1400, 600)
+        # MainWindow.setMinimumSize(QtCore.QSize(1400, 600))
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.centralwidget)
@@ -43,7 +44,12 @@ class Ui_MainWindow(object):
         self.sidebar_misc_btn.setMaximumSize(QtCore.QSize(60, 60))
         self.sidebar_misc_btn.setObjectName("sidebar_misc_btn")
         self.verticalLayout.addWidget(self.sidebar_misc_btn)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(
+            20,
+            40,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+        )
         self.verticalLayout.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.horizontalLayout.addWidget(self.sidebar_container)

@@ -753,7 +753,7 @@ class RELegalsService(BaseService):
         db = QSqlDatabase.database(constants.RE_CONNECTION)
         query = QSqlQuery(db)
         key, value = next(iter(condition.items()))
-        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_LEGALS} WHERE {key} = :value"
         if not query.prepare(sql):
             logger.error(query.lastError().text())
             return False
@@ -775,10 +775,11 @@ class REFurnitureService(BaseService):
 
     @staticmethod
     def is_value_existed(condition):
+
         db = QSqlDatabase.database(constants.RE_CONNECTION)
         query = QSqlQuery(db)
         key, value = next(iter(condition.items()))
-        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_DISTRICTS} WHERE {key} = :value"
+        sql = f"SELECT COUNT(*) FROM {constants.TABLE_RE_SETTINGS_FURNITURES} WHERE {key} = :value"
         if not query.prepare(sql):
             logger.error(query.lastError().text())
             return False

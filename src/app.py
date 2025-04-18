@@ -12,7 +12,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("My manager")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setFixedSize(self.size())
+        # self.setFixedSize(self.size())
 
         self.page_re = PageRE()
         self.page_user = PageUser()
