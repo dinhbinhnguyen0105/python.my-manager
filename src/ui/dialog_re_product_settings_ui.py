@@ -225,11 +225,16 @@ class Ui_Dialog_REProductSettings(object):
         Dialog_REProductSettings.setTabOrder(self.provinces_radio, self.districts_radio)
         Dialog_REProductSettings.setTabOrder(self.districts_radio, self.wards_radio)
         Dialog_REProductSettings.setTabOrder(self.wards_radio, self.building_line_s_radio)
-        Dialog_REProductSettings.setTabOrder(self.building_line_s_radio, self.legal_s_radio)
-        Dialog_REProductSettings.setTabOrder(self.legal_s_radio, self.name_en_input)
-        Dialog_REProductSettings.setTabOrder(self.name_en_input, self.name_vi_input)
-        Dialog_REProductSettings.setTabOrder(self.name_vi_input, self.value_input)
-        Dialog_REProductSettings.setTabOrder(self.value_input, self.tableView)
+        Dialog_REProductSettings.setTabOrder(self.building_line_s_radio, self.furniture_s_radio)
+        Dialog_REProductSettings.setTabOrder(self.furniture_s_radio, self.legal_s_radio)
+        Dialog_REProductSettings.setTabOrder(self.legal_s_radio, self.image_dir_radio)
+        Dialog_REProductSettings.setTabOrder(self.image_dir_radio, self.name_vi_input)
+        Dialog_REProductSettings.setTabOrder(self.name_vi_input, self.name_en_input)
+        Dialog_REProductSettings.setTabOrder(self.name_en_input, self.value_input)
+        Dialog_REProductSettings.setTabOrder(self.value_input, self.image_dir_value_input)
+        Dialog_REProductSettings.setTabOrder(self.image_dir_value_input, self.img_dir_is_selected_checkbox)
+        Dialog_REProductSettings.setTabOrder(self.img_dir_is_selected_checkbox, self.create_btn)
+        Dialog_REProductSettings.setTabOrder(self.create_btn, self.tableView)
 
     def retranslateUi(self, Dialog_REProductSettings):
         _translate = QtCore.QCoreApplication.translate

@@ -542,14 +542,14 @@ QCheckBox{
         <number>4</number>
        </property>
        <item>
-        <widget class="QPushButton" name="create_new_btn">
+        <widget class="QPushButton" name="action_create_btn">
          <property name="text">
           <string>Create new</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="settings_btn">
+        <widget class="QPushButton" name="action_setting_btn">
          <property name="text">
           <string>Settings</string>
          </property>
@@ -571,12 +571,27 @@ QCheckBox{
       </layout>
      </item>
      <item>
-      <widget class="QTableView" name="table_view"/>
+      <widget class="QTableView" name="users_table"/>
      </item>
     </layout>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>uid_input</tabstop>
+  <tabstop>username_input</tabstop>
+  <tabstop>password_input</tabstop>
+  <tabstop>two_fa_input</tabstop>
+  <tabstop>email_input</tabstop>
+  <tabstop>email_password_input</tabstop>
+  <tabstop>phone_number_input</tabstop>
+  <tabstop>note_input</tabstop>
+  <tabstop>type_input</tabstop>
+  <tabstop>group_input</tabstop>
+  <tabstop>action_create_btn</tabstop>
+  <tabstop>action_setting_btn</tabstop>
+  <tabstop>users_table</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

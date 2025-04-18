@@ -7,9 +7,9 @@ from contextlib import contextmanager
 from fake_useragent import UserAgent
 from PyQt6.QtSql import QSqlQuery, QSqlDatabase
 from src import constants
-from src.utils import file_handler
+from src.utils import file_handler, user_handler
 from src.services.base_service import BaseService
-
+from src.robot.selenium_controller import SeleniumController
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -138,20 +138,19 @@ class UserService:
 
     @staticmethod
     def create(payload):
-        db = QSqlDatabase.database(constants.USER_CONNECTION)
-        valid_columns = [col for col in UserService.get_columns() if col in payload]
-        if not valid_columns:
-            logger.error("No valid columns provided for create.")
-            return False
         ua_desktop_controller = UserAgent(
             os="Mac OS X",
         )
         ua_mobile_controller = UserAgent(
             os="iOS",
         )
-        payload.setdefault("mobile_ua", ua_mobile_controller.random)
-        payload.setdefault("desktop_ua", ua_desktop_controller.random)
-
+        payload["mobile_ua"] = ua_mobile_controller.random
+        payload["desktop_ua"] = ua_desktop_controller.random
+        db = QSqlDatabase.database(constants.USER_CONNECTION)
+        valid_columns = [col for col in UserService.get_columns() if col in payload]
+        if not valid_columns:
+            logger.error("No valid columns provided for create.")
+            return False
         columns = ", ".join(valid_columns)
         placeholders = ", ".join([f":{col}" for col in valid_columns])
         sql = f"INSERT INTO {constants.TABLE_USER} ({columns}) VALUES ({placeholders})"
@@ -212,9 +211,7 @@ class UserService:
             if not exec_query(db, query):
                 return False
         udd_container_dir = UserUDDService.get_selected_udd()
-        file_handler.delete_dir(
-            os.path.join(udd_container_dir.get("value"), str(record_id))
-        )
+        file_handler.delete_dir(os.path.join(udd_container_dir, str(record_id)))
         return True
 
     @staticmethod
@@ -232,6 +229,72 @@ class UserService:
         if query.next():
             return query.value(0) > 0
         return False
+
+    @staticmethod
+    def get_ua(record_id, is_mobile=False):
+        db = QSqlDatabase.database(constants.USER_CONNECTION)
+        query = QSqlQuery(db)
+        if is_mobile:
+            sql = f"SELECT mobile_ua FROM {constants.TABLE_USER} WHERE id = :id"
+        else:
+            sql = f"SELECT desktop_ua FROM {constants.TABLE_USER} WHERE id = :id"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return None
+        query.bindValue(":id", record_id)
+        if not exec_query(db, query):
+            return None
+        if query.next():
+            return query.value(0)
+        return None
+
+    @staticmethod
+    def launch_browser(record_ids, is_mobile=False):
+        udd_container = UserUDDService.get_selected_udd()
+        if not udd_container:
+            logger.error("cannot get user data dir container")
+            return False
+        proxy_records = UserProxyService.read_all()
+        if not proxy_records:
+            logger.error("cannot get proxy records")
+            return False
+        proxies = []
+        while len(proxy_records) > 0:
+            proxy_record = proxy_records.pop(0)
+            proxy_url = proxy_record.get("value")
+            import datetime
+
+            print("get proxy at: ", datetime.datetime.now())
+            proxy = user_handler.get_proxies(proxy_url)
+            if proxy:
+                proxies.append(proxy)
+            if len(proxies) == len(record_ids):
+                break
+        print("finished at: ", datetime.datetime.now())
+        if not proxies:
+            logger.error("cannot init proxy")
+            return False
+
+        for proxy in proxies:
+            record_id = record_ids.pop(0)
+            if not record_id:
+                continue
+            udd = os.path.abspath(os.path.join(udd_container, str(record_id)))
+            ua = UserService.get_ua(record_id, is_mobile)
+            if not ua:
+                logger.warning("cannot get user_agent")
+                continue
+            selenium_controller = SeleniumController(
+                {"ua": ua, "proxy": proxy, "udd": udd}
+            )
+            driver = selenium_controller.init_driver()
+            driver.get("https://bot.sannysoft.com/")
+            import time
+
+            time.sleep(10)
+            driver.get("http://httpbin.org/ip")
+
+        pass
 
 
 class UserUDDService(BaseService):
@@ -252,14 +315,14 @@ class UserUDDService(BaseService):
     def get_selected_udd(cls):
         db = QSqlDatabase.database(constants.USER_CONNECTION)
         query = QSqlQuery(db)
-        sql = f"SELECT * FROM {cls.TABLE_NAME} WHERE is_selected = :is_selected"
+        sql = f"SELECT value FROM {cls.TABLE_NAME} WHERE is_selected = :is_selected"
         if not query.prepare(sql):
             return None
         query.bindValue(":is_selected", 1)
         if not exec_query(db, query):
             return None
         if query.next():
-            return record_to_dict(query)
+            return query.value(0)
         return None
 
     @classmethod

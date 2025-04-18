@@ -12,11 +12,19 @@ class UserController(BaseController):
         service = UserService()
         super().__init__(model, service, parent)
 
+    @staticmethod
+    def launch_browser(record_ids, is_mobile):
+        UserService.launch_browser(record_ids, is_mobile)
+
 
 class UserUDDController(BaseController):
     def __init__(self, model, parent=None):
         service = UserUDDService()
         super().__init__(model, service, parent)
+
+    @staticmethod
+    def get_selected_udd():
+        return UserUDDService.get_selected_udd()
 
 
 class UserProxyController(BaseController):

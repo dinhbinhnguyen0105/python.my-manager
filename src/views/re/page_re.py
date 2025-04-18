@@ -45,9 +45,13 @@ class PageRE(QWidget, Ui_PageRE):
 
     def setup_events(self):
         self.products_table.selectionModel().selectionChanged.connect(
-            self.handle_set_default
+            self.handle_set_default_template
         )
         self.action_create_btn.clicked.connect(self.handle_create)
+        self.action_settings_btn.clicked.connect(self.handle_re_settings)
+        self.action_templates_btn.clicked.connect(self.handle_template)
+        self.action_default_btn.clicked.connect(self.handle_set_default_template)
+        self.action_random_btn.clicked.connect(self.handle_set_random_template)
         self.image_label.mousePressEvent = self.image_label_click_event
 
     def setup_filters(self):
@@ -260,7 +264,21 @@ class PageRE(QWidget, Ui_PageRE):
                 # User clicked No, do nothing
                 pass
 
-    def handle_set_default(self):
+    def handle_re_settings(self):
+        settings_re_dialog = DialogREProductSetting()
+        settings_re_dialog.setWindowTitle("RE Settings")
+        settings_re_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        settings_re_dialog.setFixedSize(settings_re_dialog.size())
+        settings_re_dialog.exec()
+
+    def handle_template(self):
+        template_re_dialog = DialogRETemplateSetting()
+        template_re_dialog.setWindowTitle("RE Templates")
+        template_re_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        template_re_dialog.setFixedSize(template_re_dialog.size())
+        template_re_dialog.exec()
+
+    def handle_set_default_template(self):
         record_ids = self.get_selected_ids()
         if not record_ids:
             return
@@ -272,6 +290,35 @@ class PageRE(QWidget, Ui_PageRE):
         title_template = re_controller.RETemplateTitleController.get_default_template()
         description_template = (
             re_controller.RETemplateDescriptionController.get_default_template()
+        )
+
+        self.detail_text.setPlainText(
+            replace_keywords(record_data, title_template).upper()
+            + "\n"
+            + replace_keywords(record_data, description_template)
+            + "\n"
+            + init_footer(record_data.get("pid"), record_data.get("updated_at"))
+        )
+        if len(self.img_paths):
+            self.display_image(self.img_paths[0])
+
+    def handle_set_random_template(self):
+        record_ids = self.get_selected_ids()
+        if not record_ids:
+            return
+        record_id = record_ids[0]
+        if not record_id:
+            return
+        record_data = self.product_controller.read(record_id, False)
+        record_raw_data = self.product_controller.read(record_id, True)
+        self.img_paths = self.product_controller.get_images(record_id)
+        title_template = re_controller.RETemplateTitleController.get_random_template(
+            record_raw_data.get("option_id")
+        )
+        description_template = (
+            re_controller.RETemplateDescriptionController.get_random_template(
+                record_raw_data.get("option_id")
+            )
         )
 
         self.detail_text.setPlainText(

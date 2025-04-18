@@ -1,6 +1,6 @@
 # src/views/user/dialog_user_create.py
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox
 from src.ui.dialog_user_ui import Ui_Dialog_UserCreate
 
 
@@ -23,10 +23,10 @@ class DialogUserCreate(QDialog, Ui_Dialog_UserCreate):
             self.type_input,
             self.group_input,
         ]
+        self.buttonBox.accepted.connect(self.handle_save)
 
     def set_events(self):
-        self.buttonBox.accepted.connect(self.handle_save)
-        self.buttonBox.rejected.connect(self.reject)
+        pass
 
     def set_fields(self):
         self.fields = {

@@ -30,6 +30,7 @@ class DialogUserSettings(QDialog, Ui_Dialog_UserSettings):
             lambda: self.set_table(constants.TABLE_USER_SETTINGS_PROXY)
         )
         self.create_new_btn.clicked.connect(self.handle_create)
+        self.buttonBox.rejected.connect(self.reject)
 
     def set_table(self, table_name):
         if table_name == constants.TABLE_USER_SETTINGS_PROXY:

@@ -437,10 +437,15 @@ QCheckBox{
   <tabstop>districts_radio</tabstop>
   <tabstop>wards_radio</tabstop>
   <tabstop>building_line_s_radio</tabstop>
+  <tabstop>furniture_s_radio</tabstop>
   <tabstop>legal_s_radio</tabstop>
-  <tabstop>name_en_input</tabstop>
+  <tabstop>image_dir_radio</tabstop>
   <tabstop>name_vi_input</tabstop>
+  <tabstop>name_en_input</tabstop>
   <tabstop>value_input</tabstop>
+  <tabstop>image_dir_value_input</tabstop>
+  <tabstop>img_dir_is_selected_checkbox</tabstop>
+  <tabstop>create_btn</tabstop>
   <tabstop>tableView</tabstop>
  </tabstops>
  <resources/>
@@ -452,8 +457,8 @@ QCheckBox{
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>256</x>
-     <y>345</y>
+     <x>264</x>
+     <y>385</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -468,8 +473,8 @@ QCheckBox{
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>324</x>
-     <y>345</y>
+     <x>332</x>
+     <y>385</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

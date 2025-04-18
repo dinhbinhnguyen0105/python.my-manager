@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/python.my-manager.v1/ui/user.ui'
+# Form implementation generated from reading ui file '/Volumes/KINGSTON/Dev/python/pyhon.my-manager/ui/user.ui'
 #
 # Created by: PyQt6 UI code generator 6.8.1
 #
@@ -261,22 +261,34 @@ class Ui_User(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setSpacing(4)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.create_new_btn = QtWidgets.QPushButton(parent=User)
-        self.create_new_btn.setObjectName("create_new_btn")
-        self.horizontalLayout.addWidget(self.create_new_btn)
-        self.settings_btn = QtWidgets.QPushButton(parent=User)
-        self.settings_btn.setObjectName("settings_btn")
-        self.horizontalLayout.addWidget(self.settings_btn)
+        self.action_create_btn = QtWidgets.QPushButton(parent=User)
+        self.action_create_btn.setObjectName("action_create_btn")
+        self.horizontalLayout.addWidget(self.action_create_btn)
+        self.action_setting_btn = QtWidgets.QPushButton(parent=User)
+        self.action_setting_btn.setObjectName("action_setting_btn")
+        self.horizontalLayout.addWidget(self.action_setting_btn)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout_21.addLayout(self.horizontalLayout)
-        self.table_view = QtWidgets.QTableView(parent=User)
-        self.table_view.setObjectName("table_view")
-        self.verticalLayout_21.addWidget(self.table_view)
+        self.users_table = QtWidgets.QTableView(parent=User)
+        self.users_table.setObjectName("users_table")
+        self.verticalLayout_21.addWidget(self.users_table)
         self.horizontalLayout_2.addLayout(self.verticalLayout_21)
 
         self.retranslateUi(User)
         QtCore.QMetaObject.connectSlotsByName(User)
+        User.setTabOrder(self.uid_input, self.username_input)
+        User.setTabOrder(self.username_input, self.password_input)
+        User.setTabOrder(self.password_input, self.two_fa_input)
+        User.setTabOrder(self.two_fa_input, self.email_input)
+        User.setTabOrder(self.email_input, self.email_password_input)
+        User.setTabOrder(self.email_password_input, self.phone_number_input)
+        User.setTabOrder(self.phone_number_input, self.note_input)
+        User.setTabOrder(self.note_input, self.type_input)
+        User.setTabOrder(self.type_input, self.group_input)
+        User.setTabOrder(self.group_input, self.action_create_btn)
+        User.setTabOrder(self.action_create_btn, self.action_setting_btn)
+        User.setTabOrder(self.action_setting_btn, self.users_table)
 
     def retranslateUi(self, User):
         _translate = QtCore.QCoreApplication.translate
@@ -291,5 +303,5 @@ class Ui_User(object):
         self.note_label.setText(_translate("User", "Note"))
         self.type_label.setText(_translate("User", "Type"))
         self.group_label.setText(_translate("User", "Group"))
-        self.create_new_btn.setText(_translate("User", "Create new"))
-        self.settings_btn.setText(_translate("User", "Settings"))
+        self.action_create_btn.setText(_translate("User", "Create new"))
+        self.action_setting_btn.setText(_translate("User", "Settings"))
