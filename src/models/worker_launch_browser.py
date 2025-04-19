@@ -172,9 +172,3 @@ class LaunchBrowser_Worker(QObject):
                 self.signal_finished.emit(self.user_id)
             finally:
                 self.signal_finished.emit(self.user_id)
-            # finally:
-            #     logger.error(f"User {self.user_id}: Calling signal_finished.emit...")
-            #     self.signal_finished.emit(self.user_id)
-            #     logger.error(
-            #         f"User {self.user_id}: signal_finished emitted. do_work finishing."
-            #     )
