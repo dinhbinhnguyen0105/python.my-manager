@@ -1,7 +1,10 @@
 # src/models/worker_launch_browser.py
 import logging, sys
+import queue
 from playwright.sync_api import sync_playwright
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
+
+from src.utils.user_handler import get_proxy
 
 
 logger = logging.getLogger(__name__)
@@ -24,12 +27,19 @@ class LaunchBrowser_Worker(QObject):
         super().__init__(parent)
         self.user_id = task_data.get("user_id")
         self.udd = task_data.get("udd")
-        self.proxy = task_data.get("proxy")
         self.ua = task_data.get("ua")
         self.headless = task_data.get("headless")
+        self.proxy_queue: queue.Queue = task_data.get("proxy_queue")
+        self.proxy_config = None
 
     @pyqtSlot()  # Decorator nếu kết nối trực tiếp tới thread.started
     def do_work(self):
+        if self.proxy_queue:
+            self.signal_status.emit(
+                self.user_id, f"User {self.user_id}: Getting proxy..."
+            )
+            logger.info(f"User {self.user_id}: Attempting to get proxy from queue.")
+
         stealth_script = """
             Object.defineProperty(navigator, 'webdriver', {
             get: () => undefined
@@ -39,7 +49,7 @@ class LaunchBrowser_Worker(QObject):
             try:
                 browser_context = p.chromium.launch_persistent_context(
                     user_data_dir=self.udd,
-                    proxy=self.proxy,
+                    proxy=proxy,
                     user_agent=self.ua,
                     headless=self.headless,
                 )

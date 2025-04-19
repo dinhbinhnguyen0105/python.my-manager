@@ -1,10 +1,11 @@
 # src/services/user_automation_service.py
 import sys, logging, os
 from PyQt6.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
+import queue
 
 from src.services.user_service import UserService, UserUDDService, UserProxyService
 from src.models.worker_launch_browser import LaunchBrowser_Worker
-from src.utils.user_handler import get_proxy
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,8 +28,8 @@ class UserAutomationService(QObject):
         self._user_service = UserService()
         self._udd_service = UserUDDService()
         self._proxy_service = UserProxyService()
-
         self._running_automation_tasks = {}
+        self._proxy_source_queue = queue.Queue()
 
     @pyqtSlot(list, bool)
     def launch_automation_task(self, record_ids: list, is_mobile: bool = False):
@@ -41,18 +42,19 @@ class UserAutomationService(QObject):
             self.task_finished_signal.emit(-1)
             return False
         proxy_records = self._proxy_service.read_all()
-        proxies = [
+        proxy_sources = [
             proxy_record.get("value")
             for proxy_record in proxy_records
             if proxy_record and "value" in proxy_record
         ]
-        if not proxies:
+        if not proxy_sources:
             logger.error("UserAutomationService: No proxy records found.")
             self.task_error_signal.emit(-1, "No proxies available.")
             self.task_finished_signal.emit(-1)
             return False
+        for source in proxy_sources:
+            self._proxy_source_queue.put(source)
 
-        # proxy_pool = cycle(proxies) if proxies else None
         for record_id in record_ids:
             if (
                 record_id in self._running_automation_tasks
@@ -69,24 +71,10 @@ class UserAutomationService(QObject):
                 self.task_finished_signal.emit(record_id)
                 continue
             udd = os.path.abspath(os.path.join(udd_container_dir, str(record_id)))
-            proxy_for_worker = None
-            while proxies:
-                proxy_for_worker = get_proxy(proxies.pop(0))
-                if proxy_for_worker:
-                    break
-            if not proxy_for_worker:
-                break
-            print("proxy_for_worker: ", proxy_for_worker)
-            # 171.236.161.110:35270:ByngId:rrgxOW
             task_data = {
                 "user_id": record_id,
                 "udd": udd,
-                # "proxy": {
-                #     "server": "171.236.161.110:35270",
-                #     "username": "ByngId",
-                #     "password": "rrgxOW",
-                # },
-                "proxy": proxy_for_worker,
+                "proxy_queue": self._proxy_source_queue,
                 "ua": ua,
                 "headless": False,
             }
