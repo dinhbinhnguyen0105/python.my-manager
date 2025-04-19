@@ -9,7 +9,11 @@ proxy_config = {
     "password": "rrgxOW",
 }
 # 171.236.161.110:35270:ByngId:rrgxOW
-
+stealth_script = """
+Object.defineProperty(navigator, 'webdriver', {
+  get: () => undefined // Hoặc bạn có thể thử dùng false
+});
+"""
 with sync_playwright() as p:
     # Khởi chạy trình duyệt với cấu hình proxy
     browser = p.chromium.launch(proxy=proxy_config, headless=False)
@@ -33,6 +37,8 @@ with sync_playwright() as p:
         print("Nội dung trang nguồn:", page.content())
 
     # ... thực hiện các thao tác khác ...
-    page.goto("https://www.whatismyip.com/")
+    page.goto("https://bot.sannysoft.com/", timeout=60000)
     time.sleep(1000)
     # browser.close()
+
+# WebDriver(New)	present (failed)

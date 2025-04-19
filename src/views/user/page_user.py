@@ -1,16 +1,11 @@
 # src/views/user/page_user.py
 
-from PyQt6.QtGui import QAction, QPixmap
-from PyQt6.QtCore import Qt, QPoint, QSortFilterProxyModel, pyqtSignal
+from PyQt6.QtGui import QAction
+from PyQt6.QtCore import Qt, QPoint, QSortFilterProxyModel
 from PyQt6.QtWidgets import QMessageBox, QWidget, QMenu, QDialog
 
 from src.models.user_model import UserModel
-from src.controllers.user_controller import (
-    UserController,
-    UserProxyController,
-    UserUDDController,
-)
-from src.controllers.base_controller import BaseController
+from src.controllers.user_controller import UserController, UserAutomationController
 from src.views.user.dialog_user_create import DialogUserCreate
 from src.views.user.dialog_user_settings import DialogUserSettings
 
@@ -30,6 +25,7 @@ class PageUser(QWidget, Ui_User):
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.source_model)
         self.user_controller = UserController(self.source_model)
+        self.user_automation_controller = UserAutomationController()
 
         self.setup_ui()
         self.setup_events()
@@ -154,8 +150,16 @@ class PageUser(QWidget, Ui_User):
 
     def handle_launch(self, is_mobile):
         record_ids = self.get_selected_ids()
-        self.user_controller.launch_browser(record_ids, is_mobile)
-        pass
+
+        if not record_ids:
+            QMessageBox.warning(
+                self, "Warning", "Please select at least one user to launch."
+            )
+            print("PageUser: No users selected.")
+            return
+        self.user_automation_controller.launch_browser(record_ids, is_mobile)
+
+        # self.user_controller.launch_browser(record_ids, is_mobile)
 
     def handle_check_status(self):
         pass

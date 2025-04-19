@@ -7,9 +7,8 @@ from contextlib import contextmanager
 from fake_useragent import UserAgent
 from PyQt6.QtSql import QSqlQuery, QSqlDatabase
 from src import constants
-from src.utils import file_handler, user_handler
+from src.utils import file_handler
 from src.services.base_service import BaseService
-from src.robot.selenium_controller import SeleniumController
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -248,53 +247,26 @@ class UserService:
             return query.value(0)
         return None
 
-    @staticmethod
-    def launch_browser(record_ids, is_mobile=False):
-        udd_container = UserUDDService.get_selected_udd()
-        if not udd_container:
-            logger.error("cannot get user data dir container")
-            return False
-        proxy_records = UserProxyService.read_all()
-        if not proxy_records:
-            logger.error("cannot get proxy records")
-            return False
-        proxies = []
-        while len(proxy_records) > 0:
-            proxy_record = proxy_records.pop(0)
-            proxy_url = proxy_record.get("value")
-            import datetime
+    # def launch_browser(self, record_ids, is_mobile=False):
+    #     udd_container = UserUDDService.get_selected_udd()
+    #     if not udd_container:
+    #         logger.error("cannot get user data dir container")
+    #         return False
+    #     proxy_records = UserProxyService.read_all()
+    #     if not proxy_records:
+    #         logger.error("cannot get proxy records")
+    #         return False
+    #     proxy_sources = [proxy_record.get("value") for proxy_record in proxy_records]
 
-            print("get proxy at: ", datetime.datetime.now())
-            proxy = user_handler.get_proxies(proxy_url)
-            if proxy:
-                proxies.append(proxy)
-            if len(proxies) == len(record_ids):
-                break
-        print("finished at: ", datetime.datetime.now())
-        if not proxies:
-            logger.error("cannot init proxy")
-            return False
-
-        for proxy in proxies:
-            record_id = record_ids.pop(0)
-            if not record_id:
-                continue
-            udd = os.path.abspath(os.path.join(udd_container, str(record_id)))
-            ua = UserService.get_ua(record_id, is_mobile)
-            if not ua:
-                logger.warning("cannot get user_agent")
-                continue
-            selenium_controller = SeleniumController(
-                {"ua": ua, "proxy": proxy, "udd": udd}
-            )
-            driver = selenium_controller.init_driver()
-            driver.get("https://bot.sannysoft.com/")
-            import time
-
-            time.sleep(10)
-            driver.get("http://httpbin.org/ip")
-
-        pass
+    #     # thread
+    #     while len(proxy_sources) > 0:
+    #         record_id = record_ids.pop(0)
+    #         proxy = user_handler.get_proxy(proxy_sources.pop(0))
+    #         udd = os.path.abspath(os.path.join(udd_container, str(record_id)))
+    #         ua = UserService.get_ua(record_id, is_mobile)
+    #         # launch browser as worker
+    #         if not record_ids:
+    #             break
 
 
 class UserUDDService(BaseService):

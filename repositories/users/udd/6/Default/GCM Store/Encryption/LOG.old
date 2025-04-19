@@ -1,3 +1,2 @@
-2025/04/18-21:10:14.844 82524 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/GCM Store/Encryption/MANIFEST-000001
-2025/04/18-21:10:14.845 82524 Recovering log #3
-2025/04/18-21:10:14.845 82524 Reusing old log /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/GCM Store/Encryption/000003.log 
+2025/04/19-13:57:43.162 9f03 Creating DB /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/GCM Store/Encryption since it was missing.
+2025/04/19-13:57:43.180 9f03 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/GCM Store/Encryption/MANIFEST-000001

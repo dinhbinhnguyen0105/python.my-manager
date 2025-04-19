@@ -1,3 +1,2 @@
-2025/04/18-21:10:12.215 82575 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Local Storage/leveldb/MANIFEST-000001
-2025/04/18-21:10:12.217 82575 Recovering log #3
-2025/04/18-21:10:12.218 82575 Reusing old log /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Local Storage/leveldb/000003.log 
+2025/04/19-13:57:40.858 3c03 Creating DB /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Local Storage/leveldb since it was missing.
+2025/04/19-13:57:40.868 3c03 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Local Storage/leveldb/MANIFEST-000001

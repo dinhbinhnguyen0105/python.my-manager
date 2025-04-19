@@ -1,3 +1,2 @@
-2025/04/18-21:10:12.613 82520 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/shared_proto_db/metadata/MANIFEST-000001
-2025/04/18-21:10:12.613 82520 Recovering log #3
-2025/04/18-21:10:12.614 82520 Reusing old log /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/shared_proto_db/metadata/000003.log 
+2025/04/19-13:57:41.265 9d03 Creating DB /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/shared_proto_db/metadata since it was missing.
+2025/04/19-13:57:41.277 9d03 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/shared_proto_db/metadata/MANIFEST-000001

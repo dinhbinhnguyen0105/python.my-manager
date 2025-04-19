@@ -1,59 +1,134 @@
-import requests
-from urllib.parse import quote_plus
+import pycurl
+import io
+import json
 from urllib.parse import urlparse
 
 
 def check_proxy(proxy_url):
-    proxies = {"http": proxy_url, "https": proxy_url}
+    """
+    Kiểm tra proxy có hoạt động được không bằng cách gọi http://httpbin.org/ip
+    Trả về tuple: (is_ok: bool, message: str, detected_ip: str|None)
+    """
+    buffer = io.BytesIO()
+    curl = pycurl.Curl()
+    curl.setopt(pycurl.URL, "http://httpbin.org/ip")
+    curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
+    curl.setopt(pycurl.CONNECTTIMEOUT, 5)  # timeout kết nối
+    curl.setopt(pycurl.TIMEOUT, 5)  # timeout toàn bộ request
 
-    test_url = "http://httpbin.org/ip"
+    # Thêm header giả lập trình duyệt thật để tránh 403
+    headers = [
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept: application/json",
+        "Accept-Language: en-US,en;q=0.9",
+        "Connection: keep-alive",
+    ]
+    curl.setopt(pycurl.HTTPHEADER, headers)
+
+    # Phân tích proxy_url dạng "http://user:pass@host:port"
+    parsed = urlparse(proxy_url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        curl.close()
+        buffer.close()
+        return False, "Invalid proxy URL", None
+
+    curl.setopt(pycurl.PROXY, parsed.hostname)
+    curl.setopt(pycurl.PROXYPORT, parsed.port or 80)
+    if parsed.username and parsed.password:
+        curl.setopt(pycurl.PROXYUSERPWD, f"{parsed.username}:{parsed.password}")
 
     try:
-        response = requests.get(test_url, proxies=proxies, timeout=1)
-        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+        curl.perform()
+        code = curl.getinfo(pycurl.RESPONSE_CODE)
+        if code != 200:
+            return False, f"HTTP Error: {code}", None
 
-        ip_data = response.json()
-        print(ip_data)
-        detected_ip = ip_data.get("origin", "Unknown IP")
-        return True, "Proxy is working", detected_ip
+        body = buffer.getvalue().decode("utf-8")
+        data = json.loads(body)
+        ip = data.get("origin") or data.get("ip") or "Unknown IP"
+        return True, "Proxy is working", ip
 
-    except requests.exceptions.Timeout:
-        return (
-            False,
-            f"Proxy did not respond within 1 seconds (Timeout).",
-            None,
-        )
-    except requests.exceptions.ConnectionError as e:
-        return (
-            False,
-            f"Could not connect to the proxy or target website: {e}",
-            None,
-        )
-    except requests.exceptions.RequestException as e:
-        return False, f"Request error via proxy: {e}", None
-    except Exception as e:
-        return False, f"Unknown error: {e}", None
+    except pycurl.error as e:
+        errno, errstr = e.args
+        return False, f"PyCurl error {errno}: {errstr}", None
+
+    finally:
+        curl.close()
+        buffer.close()
 
 
-def get_proxies(url):
+def get_proxy(url):
+    """
+    Gọi API lấy proxy từ proxyxoay.shop, parse và kiểm tra với check_proxy()
+    Trả về dict proxy hoặc False nếu thất bại.
+    """
+    buffer = io.BytesIO()
+    curl = pycurl.Curl()
+    curl.setopt(pycurl.URL, url)
+    curl.setopt(pycurl.CONNECTTIMEOUT, 5)
+    curl.setopt(pycurl.TIMEOUT, 5)
+
+    # Thêm header để request API cũng giống trình duyệt
+    headers = [
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept: application/json, text/plain, */*",
+        "Accept-Language: en-US,en;q=0.9",
+        "Referer: https://proxyxoay.shop/",
+        "Connection: keep-alive",
+    ]
+    curl.setopt(pycurl.HTTPHEADER, headers)
+    curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
+
     try:
-        parsed_url = urlparse(url)
-        if parsed_url.hostname == "proxyxoay.shop":
-            res = requests.get(url, timeout=1)
-            res = res.json()
-            if res.get("status") == 100:
-                proxy_raw = res.get("proxyhttp")
-                proxy_split = proxy_raw.split(":")
-                proxy = f"http://{proxy_split[2]}:{proxy_split[3]}@{proxy_split[0]}:{proxy_split[1]}"
-                # "42.117.243.215:10836:khljtiNj3Kd:fdkm3nbjg45d"
-                if check_proxy(proxy):
-                    return {
-                        "username": proxy_split[2],
-                        "password": proxy_split[3],
-                        "ip": proxy_split[0],
-                        "port": proxy_split[1],
-                    }
+        curl.perform()
+        code = curl.getinfo(pycurl.RESPONSE_CODE)
+        if code != 200:
+            print(f"Failed to fetch proxy list, HTTP {code}")
+            return False
+
+        body = buffer.getvalue().decode("utf-8")
+        res = json.loads(body)
+        if res.get("status") != 100 or "proxyhttp" not in res:
+            print("Invalid response from proxy API:", res)
+            return False
+
+        raw = res["proxyhttp"]  # ví dụ "42.117.243.215:10836:khljtiNj3Kd:fdkm3nbjg45d"
+        ip, port, user, pwd = raw.split(":", 3)
+        proxy_url = f"http://{user}:{pwd}@{ip}:{port}"
+
+        ok, msg, detected_ip = check_proxy(proxy_url)
+        if not ok:
+            print("Proxy test failed:", msg)
+            return False
+
+        return {
+            "username": user,
+            "password": pwd,
+            "server": f"{ip}:{port}",
+        }
+
+    except pycurl.error as e:
+        errno, errstr = e.args
+        print("PyCurl error when fetching proxies:", errstr)
         return False
+
     except Exception as e:
-        print(str(e))
+        print("Unexpected error:", str(e))
         return False
+
+    finally:
+        curl.close()
+        buffer.close()
+
+
+# Ví dụ sử dụng:
+if __name__ == "__main__":
+    proxy_api = (
+        "https://proxyxoay.shop/api/get.php"
+        "?key=TzINKouroeHgsrZcRudQfJ&nhamang=random&tinhthanh=0"
+    )
+    proxy_info = get_proxy(proxy_api)
+    if proxy_info:
+        print("Got proxy:", proxy_info)
+    else:
+        print("Cannot retrieve a working proxy.")

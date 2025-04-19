@@ -1,3 +1,2 @@
-2025/04/18-21:10:12.171 82520 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Sync Data/LevelDB/MANIFEST-000001
-2025/04/18-21:10:12.184 82520 Recovering log #3
-2025/04/18-21:10:12.185 82520 Reusing old log /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Sync Data/LevelDB/000003.log 
+2025/04/19-13:57:40.814 8303 Creating DB /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Sync Data/LevelDB since it was missing.
+2025/04/19-13:57:40.839 8303 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Sync Data/LevelDB/MANIFEST-000001

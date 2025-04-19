@@ -1,46 +1,81 @@
-from PyQt6.QtCore import QThread, QObject, pyqtSignal, QMutex, Qt
+# src/models/worker_launch_browser.py
+import logging, sys
+from playwright.sync_api import sync_playwright
+from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from src.robot.selenium_controller import SeleniumController
-import undetected_chromedriver as uc
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
+)
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(formatter)
+if not logger.hasHandlers():
+    logger.addHandler(handler)
 
 
-class Worker(QObject):
-    signal_process = pyqtSignal(int)
+class LaunchBrowser_Worker(QObject):
     signal_finished = pyqtSignal(int)
+    signal_status = pyqtSignal(int, str)
+    signal_error = pyqtSignal(int, str)
 
-    def __init__(self, worker_id, udd, proxy, ua, parent=None):
+    def __init__(self, task_data, parent=None):
         super().__init__(parent)
-        self.worker_id = worker_id
-        self._isRunning = True
-        self._mutex = QMutex()
+        self.user_id = task_data.get("user_id")
+        self.udd = task_data.get("udd")
+        self.proxy = task_data.get("proxy")
+        self.ua = task_data.get("ua")
+        self.headless = task_data.get("headless")
 
-        self.udd = udd
-        self.proxy = proxy
-        self.ua = ua
-
+    @pyqtSlot()  # Decorator nếu kết nối trực tiếp tới thread.started
     def do_work(self):
-        controller = SeleniumController(
-            {
-                "udd": self.udd,
-                "proxy": self.ua,
-                "ua": self.ua,
-            }
-        )
-        controller.init_driver()
+        stealth_script = """
+            Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined
+            });
+        """
+        with sync_playwright() as p:
+            try:
+                browser_context = p.chromium.launch_persistent_context(
+                    user_data_dir=self.udd,
+                    proxy=self.proxy,
+                    user_agent=self.ua,
+                    headless=self.headless,
+                )
+                browser_context.add_init_script(stealth_script)
+                page = browser_context.new_page()
+                self.signal_status.emit(self.user_id, "Browser ready.")
+                page.wait_for_event("close", timeout=0)
+                self.signal_status.emit(self.user_id, "Task complete.")
+                if page:
+                    page.close()
+                if browser_context:
+                    browser_context.close()
+                if p:
+                    p.stop()
 
-        self.signal_finished.emit(self.worker_id)
-
-
-# for i in range(total_steps + 1):
-#     self._mutex.lock()
-#     if not self._isRunning:
-#         self._mutex.unlock()
-#         print(f"Worker {self.worker_id}: Công việc bị hủy.")
-#         break
-#     self._mutex.unlock()
-
-#     # Giả lập công việc tốn thời gian
-#     time.sleep(sleep_duration)
-
-#     # Phát tín hiệu báo cáo tiến độ (bao gồm ID worker)
-#     self.signal_progress.emit(self.worker_id, int((i / total_steps) * 100))
+            except Exception as e:
+                if page and not page.is_closed():
+                    try:
+                        page.close()
+                        print("Page closed on error.")
+                    except:
+                        pass
+                if browser_context:
+                    if browser_context.is_connected():
+                        try:
+                            browser_context.close()
+                            print("Browser closed on error.")
+                        except:
+                            pass
+                if p:
+                    try:
+                        p.stop()
+                        print("Playwright stopped on error.")
+                    except:
+                        pass
+                self.signal_error.emit(self.user_id, f"ERROR: {e}")
+                self.signal_status.emit(self.user_id, "Error occurred.")
+            finally:
+                self.signal_finished.emit(self.user_id)
