@@ -1,2 +1,3 @@
-2025/04/19-13:57:41.061 3c03 Creating DB /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Session Storage since it was missing.
-2025/04/19-13:57:41.070 3c03 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Session Storage/MANIFEST-000001
+2025/04/19-20:26:59.134 3e07 Reusing MANIFEST /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Session Storage/MANIFEST-000001
+2025/04/19-20:26:59.135 3e07 Recovering log #3
+2025/04/19-20:26:59.136 3e07 Reusing old log /Volumes/KINGSTON/Dev/python/pyhon.my-manager/repositories/users/udd/6/Default/Session Storage/000003.log 

@@ -58,7 +58,9 @@ class UserAutomationService(QObject):
         for record_id in record_ids:
             if (
                 record_id in self._running_automation_tasks
-                and self._running_automation_tasks[record_id]["thread"].isRunning()
+                and self._running_automation_tasks[record_id][
+                    "thread"
+                ].isRunning()  # ERROR
             ):
                 self.task_status_update.emit(record_id, "Already running")
                 continue
@@ -109,12 +111,16 @@ class UserAutomationService(QObject):
     @pyqtSlot(int, str)
     def _handle_worker_status(self, user_id: int, msg: str):  # Xử lý signal của worker
         logger.info(f"User id '{user_id}' progress: {msg}")
-        pass
 
     @pyqtSlot(int)
     def _handle_worker_finished(self, user_id: int):
         logger.info(f"User id '{user_id}': Finished.")
-        pass
+        if user_id in self._running_automation_tasks:
+            thread = self._running_automation_tasks[user_id]["thread"]
+            thread.quit()
+            thread.wait()  # Đảm bảo luồng đã kết thúc
+            del self._running_automation_tasks[user_id]
+            logger.debug(f"User {user_id}: Removed task from tracking.")
 
     @pyqtSlot(int, str)
     def _handle_worker_error(self, user_id: int, msg: str):

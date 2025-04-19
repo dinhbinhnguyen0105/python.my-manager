@@ -34,26 +34,108 @@ class LaunchBrowser_Worker(QObject):
 
     @pyqtSlot()  # Decorator nếu kết nối trực tiếp tới thread.started
     def do_work(self):
+        max_get_proxy_attempts = 5
+        raw_proxy_source = None
+        processed_proxy_dict = None
+
         if self.proxy_queue:
             self.signal_status.emit(
                 self.user_id, f"User {self.user_id}: Getting proxy..."
             )
             logger.info(f"User {self.user_id}: Attempting to get proxy from queue.")
 
-        stealth_script = """
-            Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined
-            });
-        """
+            for attempt in range(1, max_get_proxy_attempts + 1):
+                if self.thread() and self.thread().isInterruptionRequested():
+                    logger.info(
+                        f"User {self.user_id}: Interruption requested during proxy fetching. Aborting."
+                    )
+                    self.signal_status.emit(
+                        self.user_id, f"User {self.user_id}: Interrupted."
+                    )
+                    self.signal_finished.emit(self.user_id)  # Báo finished khi bị ngắt
+                    return  # Thoát khỏi run_browser_task
+                try:
+                    raw_proxy_source = self.proxy_queue.get(block=True, timeout=10)
+                    logger.debug(
+                        f"User {self.user_id}: Attempt {attempt}/{max_get_proxy_attempts} - Got raw proxy source: {raw_proxy_source}"
+                    )
+                    processed_proxy_dict = get_proxy(raw_proxy_source)
+                    if processed_proxy_dict:
+                        self.proxy_config = processed_proxy_dict
+                        logger.info(
+                            f"User {self.user_id}: Successfully obtained and checked proxy on attempt {attempt}."
+                        )
+                        self.signal_status.emit(
+                            self.user_id, f"User {self.user_id}: Proxy obtained."
+                        )
+                        self.proxy_queue.task_done()  # Báo hiệu item này đã xử lý xong trong hàng đợi
+                        break  # Thoát vòng lặp thử lấy proxy
+                    else:
+                        logger.warning(
+                            f"User {self.user_id}: Attempt {attempt}/{max_get_proxy_attempts} - get_proxy_pycurl failed for {raw_proxy_source}."
+                        )
+                        self.signal_status.emit(
+                            self.user_id, f"User {self.user_id}: Proxy failed check."
+                        )
+                        self.proxy_queue.task_done()
+                except queue.Empty:
+                    logger.warning(
+                        f"User {self.user_id}: Proxy queue is empty after waiting. Cannot get proxy."
+                    )
+                    self.signal_status.emit(
+                        self.user_id, f"User {self.user_id}: Proxy queue empty."
+                    )
+                    break
+                except Exception as e:
+                    logger.error(
+                        f"User {self.user_id}: Attempt {attempt}/{max_get_proxy_attempts} - Error calling get_proxy_pycurl for {raw_proxy_source}: {e}",
+                        exc_info=True,
+                    )
+                    self.signal_status.emit(
+                        self.user_id, f"User {self.user_id}: Get proxy error."
+                    )
+                    if raw_proxy_source is not None:
+                        self.proxy_queue.task_done()
+            if not self.proxy_config:
+                logger.warning(
+                    f"User {self.user_id}: Failed to obtain a valid proxy after {max_get_proxy_attempts} attempts."
+                )
+                self.signal_error.emit(
+                    self.user_id, f"User {self.user_id}: Failed to obtain proxy."
+                )
+                self.signal_status.emit(
+                    self.user_id, f"User {self.user_id}: No proxy assigned."
+                )
+        else:
+            logger.info(
+                f"User {self.user_id}: Proxy queue is not available, proceeding without proxy."
+            )
+            self.signal_status.emit(
+                self.user_id, f"User {self.user_id}: No proxy queue."
+            )
+
+        args = [
+            "--disable-blink-features=AutomationControlled",  # Thử ẩn navigator.webdriver (init script cũng làm)
+            "--disable-infobars",  # Ẩn thanh "Chrome đang bị điều khiển..."
+            "--disable-extensions",  # Tắt tiện ích mở rộng
+        ]
+
         with sync_playwright() as p:
             try:
                 browser_context = p.chromium.launch_persistent_context(
                     user_data_dir=self.udd,
-                    proxy=proxy,
+                    proxy=self.proxy_config,
                     user_agent=self.ua,
                     headless=self.headless,
+                    args=args,
                 )
-                browser_context.add_init_script(stealth_script)
+                stealth_script = """ Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); """
+                try:
+                    browser_context.add_init_script(stealth_script)
+                except Exception as e:
+                    logger.warning(
+                        f"User {self.user_id}: Error adding init script: {e}"
+                    )
                 page = browser_context.new_page()
                 self.signal_status.emit(self.user_id, "Browser ready.")
                 page.wait_for_event("close", timeout=0)
@@ -87,5 +169,12 @@ class LaunchBrowser_Worker(QObject):
                         pass
                 self.signal_error.emit(self.user_id, f"ERROR: {e}")
                 self.signal_status.emit(self.user_id, "Error occurred.")
+                self.signal_finished.emit(self.user_id)
             finally:
                 self.signal_finished.emit(self.user_id)
+            # finally:
+            #     logger.error(f"User {self.user_id}: Calling signal_finished.emit...")
+            #     self.signal_finished.emit(self.user_id)
+            #     logger.error(
+            #         f"User {self.user_id}: signal_finished emitted. do_work finishing."
+            #     )
