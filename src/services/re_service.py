@@ -353,6 +353,23 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
             os.path.abspath(os.path.join(img_dir_record.get("value"), str(record_id)))
         )
 
+    # def get_random_product(option_id):
+    #     db = QSqlDatabase.database(constants.RE_CONNECTION)
+
+    # @staticmethod
+    # def get_random_template(option_id):
+    #     db = QSqlDatabase.database(constants.RE_CONNECTION)
+    #     query = QSqlQuery(db)
+    #     sql = f"SELECT value FROM {constants.TABLE_RE_SETTINGS_TITLE} WHERE option_id = {option_id} ORDER BY RANDOM() LIMIT 1"
+    #     if not query.prepare(sql):
+    #         logger.error(query.lastError().text())
+    #         return None
+    #     if not exec_query(db, query):
+    #         return None
+    #     if query.next():
+    #         return query.value(0)
+    #     return None
+
 
 class REImageDirService(BaseService):
     TABLE_NAME = constants.TABLE_RE_SETTINGS_IMG_DIRS

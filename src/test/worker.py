@@ -56,7 +56,6 @@ class LaunchBrowser_Worker(QObject):
             max_attemp_num = 5
             self.proxy = ""
             if self._proxy_queue:
-                # Thử lấy proxy từ get_proxy (fetch api)
                 for attempt in range(0, max_attemp_num):
                     if self.thread() and self.thread().isInterruptionRequested():
                         self._task_queue.task_done()

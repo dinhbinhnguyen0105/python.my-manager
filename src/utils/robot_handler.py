@@ -32,9 +32,7 @@ def get_proxy(proxy_raw: str) -> Dict:
         raw = res["proxyhttp"]
         ip, port, user, pwd = raw.split(":", 3)
         proxy_url = f"http://{user}:{pwd}@{ip}:{port}"
-
-        ok, msg, detected_ip = check_proxy(proxy_url)
-        if not ok:
+        if not check_proxy(proxy_url):
             return None
 
         return {
@@ -89,6 +87,7 @@ def check_proxy(proxy: str) -> bool:
         body = buffer.getvalue().decode("utf-8")
         data = json.loads(body)
         ip = data.get("origin") or data.get("ip") or "Unknown IP"
+        print(ip)
         return True
 
     except pycurl.error as e:
