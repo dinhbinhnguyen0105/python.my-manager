@@ -1,2 +1,5 @@
 .venv
 repositories
+__pycache__/
+*.pyc
+*.pyo
