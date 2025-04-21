@@ -225,6 +225,7 @@ class PageRE(QWidget, Ui_PageRE):
         create_dialog.setFixedSize(create_dialog.size())
         if create_dialog.exec() == QDialog.DialogCode.Accepted:
             self.product_controller.create(create_dialog.fields)
+            create_dialog.clear_field()
 
     def handle_edit(self):
         record_ids = self.get_selected_ids()
