@@ -96,10 +96,10 @@ class PageUser(QWidget, Ui_User):
         delete_action = QAction("Delete", self)
 
         launch_browser_mobile_action.triggered.connect(
-            lambda: self.handle_launch(is_mobile=True)
+            lambda: self.handle_launch(is_mobile=True, headless=False)
         )
         launch_browser_desktop_action.triggered.connect(
-            lambda: self.handle_launch(is_mobile=False)
+            lambda: self.handle_launch(is_mobile=False, headless=False)
         )
         check_status_action.triggered.connect(self.handle_check_status)
         delete_action.triggered.connect(self.handle_delete)
@@ -148,18 +148,15 @@ class PageUser(QWidget, Ui_User):
         setting_dialog.setFixedSize(setting_dialog.size())
         setting_dialog.exec()
 
-    def handle_launch(self, is_mobile):
-        record_ids = self.get_selected_ids()
-
-        if not record_ids:
+    def handle_launch(self, is_mobile, headless):
+        record_data = self.get_selected_data()
+        if not record_data:
             QMessageBox.warning(
                 self, "Warning", "Please select at least one user to launch."
             )
             print("PageUser: No users selected.")
             return
-        self.user_automation_controller.launch_browser(record_ids, is_mobile)
-
-        # self.user_controller.launch_browser(record_ids, is_mobile)
+        self.user_automation_controller.launch_browser(record_data, is_mobile, headless)
 
     def handle_check_status(self):
         pass
@@ -178,3 +175,35 @@ class PageUser(QWidget, Ui_User):
                 )
                 selected_ids.append(id_data)
         return selected_ids
+
+    def get_selected_data(self):
+        selected_rows = self.users_table.selectionModel().selectedRows()
+        selected_data = []
+        column_count = self.source_model.columnCount()
+        headers = [
+            self.source_model.headerData(
+                col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole
+            )
+            for col in range(column_count)
+        ]
+
+        for proxy_index in selected_rows:
+            source_index = self.proxy_model.mapToSource(proxy_index)
+            if source_index.isValid():
+                row_data = {}
+                for col in range(column_count):
+                    cell_index = self.source_model.index(source_index.row(), col)
+
+                    if cell_index.isValid():
+                        data = self.source_model.data(
+                            cell_index, Qt.ItemDataRole.DisplayRole
+                        )
+                        header_key = (
+                            headers[col]
+                            if headers[col] is not None
+                            else f"Column_{col}"
+                        )
+                        row_data[str(header_key)] = data
+                if row_data:
+                    selected_data.append(row_data)
+        return selected_data

@@ -24,10 +24,29 @@ class UserAutomationController:
         self.automation_service = UserAutomationService()
 
     @pyqtSlot(list, bool)
-    def launch_browser(self, record_ids: list, is_mobile: bool = False):
-        if not record_ids:
+    def launch_browser(
+        self, record_data: list, is_mobile: bool = False, headless: bool = False
+    ):
+        if not record_data:
             return
-        self.automation_service.launch_automation_task(record_ids, is_mobile)
+        task_data = []
+        for record in record_data:
+            task_data.append(
+                {
+                    "user_info": {
+                        "id": record.get("id"),
+                        "type": record.get("type"),
+                        "ua": (
+                            record.get("mobile_ua")
+                            if is_mobile
+                            else record.get("desktop_ua")
+                        ),
+                    },
+                    "actions": [{"action_name": "launch"}],
+                    "headless": headless,
+                }
+            )
+        self.automation_service.handle_task(task_data_list=task_data)
 
 
 class UserUDDController(BaseController):

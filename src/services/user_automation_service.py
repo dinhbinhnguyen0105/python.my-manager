@@ -5,6 +5,7 @@ from PyQt6.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 
 from src.robot.browser_worker import BrowserWorker
 from src.services.user_service import UserService, UserUDDService, UserProxyService
+from src.utils.logger import log
 
 
 class UserAutomationService(QObject):
@@ -48,8 +49,8 @@ class UserAutomationService(QObject):
             worker.signal_status.connect(self._handle_worker_status)
             worker.signal_error.connect(self._handle_worker_error)
             worker.signal_task_completed.connect(self._handle_task_completed)
-            worker.signal_finished.connect(self._handle_worker_finished)
 
+            worker.signal_finished.connect(self._handle_worker_finished)
             thread.finished.connect(worker.deleteLater)
             thread.finished.connect(thread.deleteLater)
             thread.started.connect(worker.run_task)
@@ -59,7 +60,7 @@ class UserAutomationService(QObject):
 
     # task_data_list = [{"user_info": {"id", "type", "ua"}, "actions": ["action_name": "discussion", "post_info"]}]
     @pyqtSlot(list, bool)
-    def handle_task(self, task_data_list: list, headless=False):
+    def handle_task(self, task_data_list: list):
         while not self._proxy_raw_queue.empty():
             try:
                 self._proxy_raw_queue.get_nowait()
@@ -88,7 +89,7 @@ class UserAutomationService(QObject):
                     action_info = action_list[action_index]
 
                     worker_item = {
-                        "headless": headless,
+                        "headless": user_info.get("headless"),
                         "user_info": user_info,
                         "action_index": action_index,
                         "action_info": self.handle_action(user_info, action_info),
@@ -98,10 +99,10 @@ class UserAutomationService(QObject):
                 else:
                     # Service: User {user_id} has no action at index {action_index}. Skipping for this batch
                     pass
-            if current_batch_size > 0:
-                self._task_queue.join()
-            else:
-                pass
+            # if current_batch_size > 0:
+            #     self._task_queue.join()
+            # else:
+            #     pass
 
     def handle_action(self, user_info, action_info):
         user_type = user_info.get("type")
@@ -149,36 +150,29 @@ class UserAutomationService(QObject):
 
     @pyqtSlot(int, str, QObject)
     def _handle_worker_status(self, user_id: int, message: str, worker: QObject):
-        print(f"User {user_id} (Worker {worker}): Status - {message}")
+        log(f"User {user_id} (Worker {worker}): Status - {message}")
         self.task_status_update.emit(user_id, message)
 
     @pyqtSlot(int, str, QObject)
     def _handle_worker_error(self, user_id: int, error_message: str, worker: QObject):
-        print(f"User {user_id} (Worker {worker}): ERROR - {error_message}")
+        log(f"User {user_id} (Worker {worker}): ERROR - {error_message}")
         self.task_error_signal.emit(user_id, error_message)
 
     @pyqtSlot(int, QObject)
     def _handle_task_completed(self, user_id: int, worker: QObject):
-        print(f"User {user_id} (Worker {worker}): One task completed successfully.")
+        log(f"User {user_id} (Worker {worker}): One task completed successfully.")
         self.task_finished_signal.emit(user_id)
 
     @pyqtSlot(QObject)
     def _handle_worker_finished(self, worker: QObject):
-        print(f"UserAutomationService: Worker {worker} thread finished.")
-        if worker in self._running_automation_workers:
-            thread_obj = self._running_automation_workers.pop(worker)
-            print(
-                f"Worker {worker}: Removed from tracking. Thread {thread_obj} exiting."
-            )
-            if not self._running_automation_workers:
-                print(
-                    "UserAutomationService: All workers have finished processing tasks and exited."
-                )
-                self.all_tasks_completed.emit()
-        else:
-            print(
-                f"UserAutomationService: Worker {worker}: Finished signal received, but worker not found in tracking dict."
-            )
+        log(f"UserAutomationService: Worker {worker} thread finished.")
+        thread = self._running_automation_workers.pop(worker, None)
+        if thread:
+            thread.quit()
+            thread.wait()
+        # Nếu hết worker, emit all_tasks_completed
+        if not self._running_automation_workers:
+            self.all_tasks_completed.emit()
 
     @pyqtSlot()
     def stop_all_tasks(self):
@@ -193,7 +187,7 @@ class UserAutomationService(QObject):
             self._running_automation_workers.items()
         ):  # Lặp trên bản sao items
             if thread.isRunning():
-                print(
+                log(
                     f"UserAutomationService: Requesting interruption for worker {worker} (thread {thread})."
                 )
                 thread.requestInterruption()
