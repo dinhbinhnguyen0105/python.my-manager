@@ -78,6 +78,8 @@ def set_network_throttling(page: Page, condition_name: str):
 
 def discussion(payload):
     browser_option = {
+        "screen": {"width": 1920, "height": 1080},
+        # "screen": {"width": 1080, "height": 760},
         "user_data_dir": payload.get("user_data_dir"),
         "headless": payload.get("headless"),
         "args": PLAYWRIGHT_ARGS,
@@ -89,6 +91,9 @@ def discussion(payload):
             browser_context = p.chromium.launch_persistent_context(**browser_option)
             page = browser_context.new_page()
             log(f"Browser launched.")
+            page.wait_for_event("close", timeout=0)
+
+            return
             # set_network_throttling(page, "Slow 3G")
             page.goto("https://www.facebook.com/groups/feed/")
 
@@ -216,7 +221,8 @@ def discussion(payload):
 if __name__ == "__main__":
     discussion(
         {
-            "user_data_dir": "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/users/udd/7",
+            # "user_data_dir": "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/users/udd/7",
+            "user_data_dir": "/Users/ndb/Dev/python/python.my-manager/repositories/users/udd/2",
             "headless": False,
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
         }

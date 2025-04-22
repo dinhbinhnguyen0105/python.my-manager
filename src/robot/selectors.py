@@ -6,6 +6,7 @@ S_TABLIST = "div[aria-orientation='horizontal'][role='tablist']"
 S_TABLIST_TAB = "[role='tab'][aria-hidden='false']"
 S_BUTTON = "div[role='button']"
 S_TEXTBOX = "[role='textbox']"
+S_IMG_INPUT = "input[accept][type='file']"
 
 
 def s_profile(language):
@@ -29,6 +30,24 @@ def s_close_button(language):
         return "[aria-label='close' i][role='button']"
 
 
+def s_image_button(language):
+    if language == "vi":
+        return "[aria-label='ảnh/video' i][role='button']"
+    elif language == "en":
+        return "[aria-label='photo/video' i][role='button']"
+
+
+def s_post_button(language):
+    if language == "vi":
+        return "[aria-label='đăng' i][role='button']"
+    elif language == "en":
+        return "[aria-label='post' i][role='button']"
+
+
 S_PROFILE = s_profile
 S_DIALOG_CREATE_POST = s_dialog_create_post
 S_CLOSE_BUTTON = s_close_button
+S_IMAGE_BUTTON = s_image_button
+S_POST_BUTTON = s_post_button
+
+# <input accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv" class="x1s85apg" multiple="" type="file">
