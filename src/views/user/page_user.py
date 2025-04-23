@@ -19,7 +19,7 @@ class PageUser(QWidget, Ui_User):
         self.setupUi(self)
         self.setWindowTitle("Real Estate Product")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setFixedSize(self.size())
+        # self.setFixedSize(self.size())
 
         self.source_model = UserModel()
         self.proxy_model = QSortFilterProxyModel()

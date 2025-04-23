@@ -1,3 +1,5 @@
+from datetime import datetime
+import pytz
 from random import randint
 import platform
 import subprocess
@@ -37,10 +39,16 @@ def replace_keywords(data, template):
 
 
 def init_footer(pid, updated_at):
+    now_utc = datetime.utcnow()
+    tz_hochiminh = pytz.timezone("Asia/Ho_Chi_Minh")
+    now_hochiminh = now_utc.replace(tzinfo=pytz.utc).astimezone(tz_hochiminh)
+    format_string = "%Y-%m-%d %H:%M:%S"
+
     return f"""
 [
     pid <{pid}>
     updated_at <{updated_at}>
+    published_at <{now_hochiminh.strftime(format_string)}>
 ]
 """
 

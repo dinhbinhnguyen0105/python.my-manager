@@ -8,46 +8,10 @@ S_BUTTON = "div[role='button']"
 S_TEXTBOX = "[role='textbox']"
 S_IMG_INPUT = "input[accept][type='file']"
 
-
-def s_profile(language):
-    if language == "vi":
-        return "[aria-label='trang cá nhân' i]"
-    elif language == "en":
-        return "[aria-label='profile' i]"
-
-
-def s_dialog_create_post(language):
-    if language == "vi":
-        return "[aria-label='tạo bài viết' i][role='dialog']"
-    elif language == "en":
-        return "[aria-label='create post' i][role='dialog']"
-
-
-def s_close_button(language):
-    if language == "vi":
-        return "[aria-label='đóng' i][role='button']"
-    elif language == "en":
-        return "[aria-label='close' i][role='button']"
-
-
-def s_image_button(language):
-    if language == "vi":
-        return "[aria-label='ảnh/video' i][role='button']"
-    elif language == "en":
-        return "[aria-label='photo/video' i][role='button']"
-
-
-def s_post_button(language):
-    if language == "vi":
-        return "[aria-label='đăng' i][role='button']"
-    elif language == "en":
-        return "[aria-label='post' i][role='button']"
-
-
-S_PROFILE = s_profile
-S_DIALOG_CREATE_POST = s_dialog_create_post
-S_CLOSE_BUTTON = s_close_button
-S_IMAGE_BUTTON = s_image_button
-S_POST_BUTTON = s_post_button
+S_PROFILE = "[aria-label='profile' i]"
+S_DIALOG_CREATE_POST = "[aria-label='create post' i][role='dialog']"
+S_CLOSE_BUTTON = "[aria-label='close' i][role='button']"
+S_IMAGE_BUTTON = "[aria-label='photo/video' i][role='button']"
+S_POST_BUTTON = "[aria-label='post' i][role='button']"
 
 # <input accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv" class="x1s85apg" multiple="" type="file">
