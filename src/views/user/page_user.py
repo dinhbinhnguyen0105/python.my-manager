@@ -5,7 +5,8 @@ from PyQt6.QtCore import Qt, QPoint, QSortFilterProxyModel
 from PyQt6.QtWidgets import QMessageBox, QWidget, QMenu, QDialog
 
 from src.models.user_model import UserModel
-from src.controllers.user_controller import UserController, UserAutomationController
+from src.controllers.user_controller import UserController
+from src.controllers.robot_controller import RobotController
 from src.views.user.dialog_user_create import DialogUserCreate
 from src.views.user.dialog_user_settings import DialogUserSettings
 
@@ -25,7 +26,7 @@ class PageUser(QWidget, Ui_User):
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.source_model)
         self.user_controller = UserController(self.source_model)
-        self.user_automation_controller = UserAutomationController()
+        self.user_automation_controller = RobotController()
 
         self.setup_ui()
         self.setup_events()
@@ -90,22 +91,22 @@ class PageUser(QWidget, Ui_User):
     def show_context_menu(self, pos: QPoint):
         global_pos = self.users_table.mapToGlobal(pos)
         menu = QMenu(self.users_table)
-        launch_browser_mobile_action = QAction("Launch as mobile", self)
         launch_browser_desktop_action = QAction("Launch as desktop", self)
+        launch_browser_mobile_action = QAction("Launch as mobile", self)
         check_status_action = QAction("Check", self)
         delete_action = QAction("Delete", self)
-
-        launch_browser_mobile_action.triggered.connect(
-            lambda: self.handle_launch(is_mobile=True, headless=False)
-        )
         launch_browser_desktop_action.triggered.connect(
             lambda: self.handle_launch(is_mobile=False, headless=False)
         )
+        launch_browser_mobile_action.triggered.connect(
+            lambda: self.handle_launch(is_mobile=True, headless=False)
+        )
+
         check_status_action.triggered.connect(self.handle_check_status)
         delete_action.triggered.connect(self.handle_delete)
 
-        menu.addAction(launch_browser_mobile_action)
         menu.addAction(launch_browser_desktop_action)
+        menu.addAction(launch_browser_mobile_action)
         menu.addAction(check_status_action)
         menu.addAction(delete_action)
 

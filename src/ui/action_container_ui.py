@@ -13,6 +13,48 @@ class Ui_action_container(object):
     def setupUi(self, action_container):
         action_container.setObjectName("action_container")
         action_container.resize(480, 640)
+        action_container.setStyleSheet("#action_container{\n"
+"  font-family: \"Courier New\";\n"
+"  background-color: #FFFFFF;\n"
+"}\n"
+"QGroupBox {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  background-color: rgba(248, 249, 250, 1);\n"
+"}\n"
+"QLineEdit {\n"
+"  padding: 4px 0;\n"
+"  border: 1px solid #ced4da;\n"
+"  border-radius: 8px;\n"
+"  margin-left: 8px;\n"
+"  padding-left: 4px;\n"
+"  background-color: #FFFFFF;\n"
+"  color:#212529;\n"
+"}\n"
+"QPlainTextEdit {\n"
+"    background-color: #FFFFFF;\n"
+"  color:#212529;\n"
+"}\n"
+"QLabel {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  color: rgb(90, 93, 97);\n"
+"}\n"
+"QRadioButton {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  color: #212529;\n"
+"}\n"
+"QComboBox {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  color: #212529;\n"
+"}\n"
+"QPushButton {\n"
+"  color: #212529;\n"
+"}\n"
+"\n"
+"")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(action_container)
         self.horizontalLayout_3.setContentsMargins(8, 8, 8, 8)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -60,25 +102,123 @@ class Ui_action_container(object):
         self.verticalLayout_18.setSpacing(0)
         self.verticalLayout_18.setObjectName("verticalLayout_18")
         self.verticalLayout_17 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_17.setContentsMargins(-1, 0, -1, 0)
         self.verticalLayout_17.setSpacing(8)
         self.verticalLayout_17.setObjectName("verticalLayout_17")
-        self.image_label = QtWidgets.QLabel(parent=self.details_container_w)
-        self.image_label.setMinimumSize(QtCore.QSize(0, 200))
-        self.image_label.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.image_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setObjectName("image_label")
-        self.verticalLayout_17.addWidget(self.image_label)
-        self.title_input = QtWidgets.QLineEdit(parent=self.details_container_w)
+        self.images_container_w = QtWidgets.QWidget(parent=self.details_container_w)
+        self.images_container_w.setObjectName("images_container_w")
+        self.verticalLayout_13 = QtWidgets.QVBoxLayout(self.images_container_w)
+        self.verticalLayout_13.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_13.setSpacing(0)
+        self.verticalLayout_13.setObjectName("verticalLayout_13")
+        self.verticalLayout_14 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_14.setObjectName("verticalLayout_14")
+        self.images_label = QtWidgets.QLabel(parent=self.images_container_w)
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(-1)
+        self.images_label.setFont(font)
+        self.images_label.setStyleSheet("margin: 0;")
+        self.images_label.setObjectName("images_label")
+        self.verticalLayout_14.addWidget(self.images_label)
+        self.images_input = QtWidgets.QLineEdit(parent=self.images_container_w)
+        self.images_input.setStyleSheet("margin: 0;\n"
+"padding-left: 4px;")
+        self.images_input.setObjectName("images_input")
+        self.verticalLayout_14.addWidget(self.images_input)
+        self.images_message = QtWidgets.QLabel(parent=self.images_container_w)
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(-1)
+        self.images_message.setFont(font)
+        self.images_message.setStyleSheet("margin: 0;\n"
+"color: red;")
+        self.images_message.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.images_message.setObjectName("images_message")
+        self.verticalLayout_14.addWidget(self.images_message)
+        self.verticalLayout_13.addLayout(self.verticalLayout_14)
+        self.verticalLayout_17.addWidget(self.images_container_w)
+        self.title_container_w = QtWidgets.QWidget(parent=self.details_container_w)
+        self.title_container_w.setObjectName("title_container_w")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.title_container_w)
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_4.setSpacing(0)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setContentsMargins(-1, 12, -1, -1)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.title_label = QtWidgets.QLabel(parent=self.title_container_w)
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(-1)
+        self.title_label.setFont(font)
+        self.title_label.setStyleSheet("margin: 0;")
+        self.title_label.setObjectName("title_label")
+        self.verticalLayout.addWidget(self.title_label)
+        self.title_input = QtWidgets.QLineEdit(parent=self.title_container_w)
+        self.title_input.setStyleSheet("margin: 0;\n"
+"padding-left: 4px;")
         self.title_input.setObjectName("title_input")
-        self.verticalLayout_17.addWidget(self.title_input)
-        self.description_input = QtWidgets.QPlainTextEdit(parent=self.details_container_w)
+        self.verticalLayout.addWidget(self.title_input)
+        self.verticalLayout_4.addLayout(self.verticalLayout)
+        self.verticalLayout_17.addWidget(self.title_container_w)
+        self.description_container_w = QtWidgets.QWidget(parent=self.details_container_w)
+        self.description_container_w.setObjectName("description_container_w")
+        self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.description_container_w)
+        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_7.setSpacing(0)
+        self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.verticalLayout_8 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_8.setContentsMargins(-1, -1, -1, 12)
+        self.verticalLayout_8.setObjectName("verticalLayout_8")
+        self.description_label = QtWidgets.QLabel(parent=self.description_container_w)
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(-1)
+        self.description_label.setFont(font)
+        self.description_label.setStyleSheet("margin: 0;")
+        self.description_label.setObjectName("description_label")
+        self.verticalLayout_8.addWidget(self.description_label)
+        self.description_input = QtWidgets.QPlainTextEdit(parent=self.description_container_w)
         self.description_input.setObjectName("description_input")
-        self.verticalLayout_17.addWidget(self.description_input)
+        self.verticalLayout_8.addWidget(self.description_input)
+        self.verticalLayout_7.addLayout(self.verticalLayout_8)
+        self.verticalLayout_17.addWidget(self.description_container_w)
         self.verticalLayout_18.addLayout(self.verticalLayout_17)
         self.post_container_layout.addWidget(self.details_container_w)
-        self.pid_input = QtWidgets.QLineEdit(parent=self.post_container)
+        self.pid_container_w = QtWidgets.QWidget(parent=self.post_container)
+        self.pid_container_w.setObjectName("pid_container_w")
+        self.verticalLayout_15 = QtWidgets.QVBoxLayout(self.pid_container_w)
+        self.verticalLayout_15.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_15.setSpacing(0)
+        self.verticalLayout_15.setObjectName("verticalLayout_15")
+        self.verticalLayout_16 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_16.setObjectName("verticalLayout_16")
+        self.pid_label = QtWidgets.QLabel(parent=self.pid_container_w)
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(-1)
+        self.pid_label.setFont(font)
+        self.pid_label.setStyleSheet("margin: 0;")
+        self.pid_label.setObjectName("pid_label")
+        self.verticalLayout_16.addWidget(self.pid_label)
+        self.pid_input = QtWidgets.QLineEdit(parent=self.pid_container_w)
+        self.pid_input.setStyleSheet("margin: 0;\n"
+"padding-left: 4px;")
         self.pid_input.setObjectName("pid_input")
-        self.post_container_layout.addWidget(self.pid_input)
+        self.verticalLayout_16.addWidget(self.pid_input)
+        self.pid_message = QtWidgets.QLabel(parent=self.pid_container_w)
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(-1)
+        self.pid_message.setFont(font)
+        self.pid_message.setStyleSheet("margin: 0;\n"
+"color: red;")
+        self.pid_message.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.pid_message.setObjectName("pid_message")
+        self.verticalLayout_16.addWidget(self.pid_message)
+        self.verticalLayout_15.addLayout(self.verticalLayout_16)
+        self.post_container_layout.addWidget(self.pid_container_w)
         self.verticalLayout_3.addLayout(self.post_container_layout)
         self.action_container_layout.addWidget(self.post_container)
         self.interaction_container = QtWidgets.QWidget(parent=action_container)
@@ -92,6 +232,11 @@ class Ui_action_container(object):
         self.verticalLayout_2.addWidget(self.label)
         self.horizontalLayout_2.addLayout(self.verticalLayout_2)
         self.action_container_layout.addWidget(self.interaction_container)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.action_container_layout.addItem(spacerItem)
+        self.delete_action_btn = QtWidgets.QPushButton(parent=action_container)
+        self.delete_action_btn.setObjectName("delete_action_btn")
+        self.action_container_layout.addWidget(self.delete_action_btn)
         self.horizontalLayout_3.addLayout(self.action_container_layout)
 
         self.retranslateUi(action_container)
@@ -106,5 +251,11 @@ class Ui_action_container(object):
         self.random_radio.setText(_translate("action_container", "random"))
         self.pid_radio.setText(_translate("action_container", "pid"))
         self.manual_radio.setText(_translate("action_container", "manual"))
-        self.image_label.setText(_translate("action_container", "Images"))
+        self.images_label.setText(_translate("action_container", "Image paths"))
+        self.images_message.setText(_translate("action_container", "Image message"))
+        self.title_label.setText(_translate("action_container", "Title"))
+        self.description_label.setText(_translate("action_container", "Description"))
+        self.pid_label.setText(_translate("action_container", "PID"))
+        self.pid_message.setText(_translate("action_container", "PID message"))
         self.label.setText(_translate("action_container", "interaction"))
+        self.delete_action_btn.setText(_translate("action_container", "Delete action"))

@@ -21,13 +21,18 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
     groups = action_info.get("groups", [])
     title = action_info.get("title")
     description = action_info.get("description")
-    images = action_info.get("images")
+    images = action_info.get("images", [])
     max_groups = 5
     current_group = 0
     if len(groups):
         pass
     else:
         # try:
+        page.goto("http://httpbin.org/ip")
+        origin_locator = page.locator("pre")
+        print(f"user_id: {user_id} - {origin_locator.first.text_content()}")
+        sleep(30)
+        return
         page.goto("https://www.facebook.com/groups/feed/", timeout=60000)
         page_language = page.locator("html").get_attribute("lang")
         if page_language != "en":
@@ -40,7 +45,7 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
             _ = sidebar_locator.first.locator(selectors.S_LOADING)
             if _.count():
                 try:
-                    sleep(0.3)
+                    random_sleep(1, 3)
                     _.first.scroll_into_view_if_needed(timeout=100)
                 except:
                     break
@@ -50,13 +55,6 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
         group_urls = []
         for group_locator in group_locators.all():
             group_urls.append(group_locator.get_attribute("href"))
-
-        # for group_locator in group_locators.all():
-        #     random_sleep()
-        #     group_locator.first.scroll_into_view_if_needed()
-        #     random_sleep()
-        #     group_locator.first.click()
-        #     sleep(1)
         for group_url in group_urls:
             page.goto(group_url, timeout=60_000)
             main_locator = page.locator(selectors.S_MAIN)
@@ -83,7 +81,7 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
                 except:
                     log("continue!")
                     continue
-                random_sleep()
+                random_sleep(1, 3)
                 profile_locator.first.scroll_into_view_if_needed()
                 discussion_btn_locator = profile_locator
                 while True:
@@ -100,7 +98,7 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
                         discussion_btn_locator = discussion_btn_locator.first.locator(
                             ".."
                         )
-                random_sleep()
+                random_sleep(1, 3)
                 discussion_btn_locator.first.scroll_into_view_if_needed()
                 discussion_btn_locator.first.highlight()
                 try:
@@ -124,19 +122,19 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
                         selectors.S_IMAGE_BUTTON
                     )
                     image_btn_locator.first.highlight()
-                    random_sleep()
+                    random_sleep(1, 3)
                     image_btn_locator.click()
 
                     image_input_locator = dialog_container_locator.locator(
                         selectors.S_IMG_INPUT
                     )
-                    random_sleep()
+                    random_sleep(1, 3)
                     image_input_locator.set_input_files(images, timeout=10000)
 
                 textbox_locator = dialog_container_locator.first.locator(
                     selectors.S_TEXTBOX
                 )
-                random_sleep()
+                random_sleep(1, 3)
                 textbox_locator.fill(title + "\n" + description)
                 post_btn_locators = dialog_container_locator.first.locator(
                     selectors.S_POST_BUTTON
@@ -150,13 +148,12 @@ def do_discussion_action(page: Page, user_id, action_info: dict, worker: QObject
                 # :not([aria-disabled])
                 post_btn_locators.first.click()
                 dialog_container_locator.wait_for(state="detached", timeout=60_000)
-                random_sleep()
+                random_sleep(1, 3)
             else:
                 continue
 
             if current_group >= max_groups:
                 break
-            print("pass!")
             current_group += 1
 
 

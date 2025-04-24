@@ -29,8 +29,8 @@ if not logger.handlers:
 logger.setLevel(logging.INFO) 
 
 
-# Lớp UserAutomationService (Quản lý Pool Thread và các Hàng đợi)
-class UserAutomationService(QObject):
+# Lớp RobotService (Quản lý Pool Thread và các Hàng đợi)
+class RobotService(QObject):
     # Tín hiệu báo cáo trạng thái/hoàn thành/lỗi lên Controller
     task_status_update = pyqtSignal(int, str) 
     task_finished_signal = pyqtSignal(int) # Signal phát khi MỘT tác vụ cho user_id cụ thể hoàn thành
@@ -66,7 +66,7 @@ class UserAutomationService(QObject):
         self._max_threads = 4 # <-- Đặt số lượng thread cố định, có thể cấu hình
 
 
-        logger.info("UserAutomationService instance created.")
+        logger.info("RobotService instance created.")
 
         # --- Tạo pool worker ngay khi Service được khởi tạo ---
         # Các worker này sẽ khởi động và chờ tác vụ trong _task_queue
@@ -118,26 +118,26 @@ class UserAutomationService(QObject):
 
             # --- Bắt đầu luồng ---
             thread.start()
-            # print(f"UserAutomationService: Started thread {thread} for worker {worker}.") # Log chi tiết thread/worker object
-            logger.info(f"UserAutomationService: Started thread for worker {worker}.") 
+            # print(f"RobotService: Started thread {thread} for worker {worker}.") # Log chi tiết thread/worker object
+            logger.info(f"RobotService: Started thread for worker {worker}.") 
 
             # --- Lưu trữ Worker và Thread trong dictionary quản lý pool ---
             # Sử dụng worker object làm key
             self._running_automation_workers[worker] = thread 
 
-         logger.info(f"UserAutomationService: Worker pool created/updated. Pool size: {len(self._running_automation_workers)}")
+         logger.info(f"RobotService: Worker pool created/updated. Pool size: {len(self._running_automation_workers)}")
 
 
     # Phương thức này được Controller gọi để bắt đầu xử lý một tập hợp record_ids
     @pyqtSlot(list, bool) 
     def launch_automation_tasks(self, record_ids: list, is_mobile: bool = False):
-        print(f"UserAutomationService: Received launch request for IDs: {record_ids}")
-        logger.info(f"UserAutomationService: Launching automation tasks for IDs: {record_ids}")
+        print(f"RobotService: Received launch request for IDs: {record_ids}")
+        logger.info(f"RobotService: Launching automation tasks for IDs: {record_ids}")
 
         # --- 1. Thu thập dữ liệu cần thiết chung ---
         udd_container_data = self._udd_service.get_selected_udd() 
         if not udd_container_data or 'value' not in udd_container_data:
-            logger.error("UserAutomationService: cannot get user data dir container path")
+            logger.error("RobotService: cannot get user data dir container path")
             self.task_error_signal.emit(-1, "Cannot get UDD container path.") 
             # self.task_finished_signal.emit(-1) # Không phát finished cho lỗi chung
             return False
@@ -147,7 +147,7 @@ class UserAutomationService(QObject):
         proxy_sources = [proxy_record.get("value") for proxy_record in proxy_records if proxy_record and "value" in proxy_record]
 
         if not proxy_sources:
-            logger.warning("UserAutomationService: No proxy records found. All tasks will run without proxies.")
+            logger.warning("RobotService: No proxy records found. All tasks will run without proxies.")
 
         # --- 2. Đổ các nguồn proxy thô vào Hàng đợi Nguồn Proxy (cho Worker lấy) ---
         # Bạn có thể quyết định làm rỗng hàng đợi cũ hoặc thêm vào
@@ -159,7 +159,7 @@ class UserAutomationService(QObject):
         
         for source in proxy_sources:
             self._proxy_source_queue.put(source)
-        logger.info(f"UserAutomationService: Reloaded {len(proxy_sources)} raw proxy sources into the proxy queue.")
+        logger.info(f"RobotService: Reloaded {len(proxy_sources)} raw proxy sources into the proxy queue.")
 
 
         # --- 3. Đổ các Tác vụ (task_data) vào Hàng đợi Tác vụ ---
@@ -217,7 +217,7 @@ class UserAutomationService(QObject):
 
         final_task_count = self._task_queue.qsize()
         added_tasks = final_task_count - initial_task_count
-        logger.info(f"UserAutomationService: Queued {added_tasks} new tasks. Total tasks in queue: {final_task_count}.")
+        logger.info(f"RobotService: Queued {added_tasks} new tasks. Total tasks in queue: {final_task_count}.")
 
         # === Các worker trong pool sẽ tự động bắt đầu xử lý các tác vụ mới trong hàng đợi ===
         # Không cần lặp qua record_ids để start thread ở đây nữa
@@ -242,7 +242,7 @@ class UserAutomationService(QObject):
     @pyqtSlot(int, str) 
     def _handle_worker_error(self, user_id: int, error_message: str):
         # Log này sẽ báo cáo user_id của task gặp lỗi
-        logger.error(f"UserAutomationService: Worker error for User {user_id}: {error_message}")
+        logger.error(f"RobotService: Worker error for User {user_id}: {error_message}")
         # Phát tín hiệu lên Controller/View
         self.task_error_signal.emit(user_id, error_message)
         # Controller/View có thể cập nhật trạng thái cho user_id này là lỗi
@@ -253,23 +253,23 @@ class UserAutomationService(QObject):
     # Worker phát tín hiệu finished và truyền chính nó (self)
     @pyqtSlot(QObject) # Slot nhận worker object
     def _handle_worker_finished(self, worker: QObject):
-        logger.info(f"UserAutomationService: Worker {worker} thread finished.")
+        logger.info(f"RobotService: Worker {worker} thread finished.")
         
         # Xóa worker khỏi dictionary quản lý pool
         if worker in self._running_automation_workers:
             thread_obj = self._running_automation_workers.pop(worker) 
-            # print(f"UserAutomationService: Removed worker {worker} (thread {thread_obj}) from tracking.")
+            # print(f"RobotService: Removed worker {worker} (thread {thread_obj}) from tracking.")
             logger.debug(f"Worker {worker}: Removed from tracking.")
             
             # --- Kiểm tra xem tất cả worker đã kết thúc chưa ---
             if not self._running_automation_workers:
-                logger.info("UserAutomationService: All workers have finished processing tasks.")
+                logger.info("RobotService: All workers have finished processing tasks.")
                 # === Phát tín hiệu báo TẤT CẢ tác vụ đã hoàn thành ===
                 self.all_tasks_completed.emit() 
-                logger.info("UserAutomationService: Emitted all_tasks_completed signal.")
+                logger.info("RobotService: Emitted all_tasks_completed signal.")
 
         else:
-             logger.warning(f"UserAutomationService: Worker {worker}: Finished signal received, but worker not found in tracking dict.")
+             logger.warning(f"RobotService: Worker {worker}: Finished signal received, but worker not found in tracking dict.")
 
         # task_finished_signal (cho TỪNG user_id) sẽ được worker phát ra BÊN TRONG vòng lặp xử lý task
 
@@ -278,7 +278,7 @@ class UserAutomationService(QObject):
     # Phương thức này được Controller gọi khi cần dừng pool worker
     @pyqtSlot() 
     def stop_all_automation_tasks(self):
-        logger.info("UserAutomationService: Requesting all workers to stop.")
+        logger.info("RobotService: Requesting all workers to stop.")
         
         # Rỗng hàng đợi tác vụ ngay lập tức (tùy chọn)
         while not self._task_queue.empty():
@@ -293,22 +293,22 @@ class UserAutomationService(QObject):
         # Yêu cầu tất cả các worker đang chạy ngắt (worker cần kiểm tra cờ này)
         for worker, thread in self._running_automation_workers.items(): 
             if thread.isRunning():
-                 logger.info(f"UserAutomationService: Requesting interruption for worker {worker} (thread {thread}).")
+                 logger.info(f"RobotService: Requesting interruption for worker {worker} (thread {thread}).")
                  thread.requestInterruption() # Worker cần kiểm tra cờ này trong vòng lặp và các thao tác chặn
 
         # Bạn có thể muốn chờ các worker kết thúc ở đây nếu cần đảm bảo chúng dừng hoàn toàn
         # trước khi hàm stop_all này trả về (ví dụ khi đóng ứng dụng)
         # for worker, thread in list(self._running_automation_workers.items()): # Lặp trên bản sao
         #     if thread.isRunning():
-        #          logger.info(f"UserAutomationService: Waiting for worker {worker} thread to finish.")
+        #          logger.info(f"RobotService: Waiting for worker {worker} thread to finish.")
         #          thread.wait(5000) # Chờ tối đa 5 giây
         #          if thread.isRunning():
         #              logger.warning(f"Worker {worker}: Thread did not finish gracefully after waiting.")
 
 
-# --- Cần đảm bảo các Service dữ liệu (UserService, UDD, Proxy) được inject khi tạo UserAutomationService ---
+# --- Cần đảm bảo các Service dữ liệu (UserService, UDD, Proxy) được inject khi tạo RobotService ---
 # Ví dụ trong MainWindow:
 # user_service = UserService()
 # udd_service = UserUDDService()
 # proxy_service = UserProxyService()
-# automation_service = UserAutomationService(user_service, udd_service, proxy_service)
+# automation_service = RobotService(user_service, udd_service, proxy_service)

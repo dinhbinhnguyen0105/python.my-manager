@@ -12,6 +12,7 @@ class REProductController(BaseController):
     def __init__(self, model, parent=None):
         service = re_service.REProductService()
         super().__init__(model, service, parent)
+        self.service = service
 
     def create(self, payload):
         payload.setdefault("image_paths", [])
@@ -48,6 +49,16 @@ class REProductController(BaseController):
                 product = self.service.read(record_id)
             else:
                 product = self.service.read_raw(record_id)
+            if not product:
+                QMessageBox.warning(None, "Warning", "Product not found.")
+            return product
+        except Exception as e:
+            QMessageBox.critical(None, "Error", str(e))
+            return None
+
+    def read_by_pid(self, pid):
+        try:
+            product = self.service.read_by_pid(pid)
             if not product:
                 QMessageBox.warning(None, "Warning", "Product not found.")
             return product
@@ -132,14 +143,6 @@ class REProductController(BaseController):
         if not payload.get("image_paths"):
             QMessageBox.critical(None, "Error", "invalid image paths.".capitalize())
             return False
-        # print("is_create", is_create)
-        # if is_create:
-        #     if not payload.get("pid") or self.service.is_value_existed(
-        #         {"pid": payload.get("pid")}
-        #     ):
-        #         QMessageBox.critical(None, "Error", "invalid pid.".capitalize())
-        #         return False
-
         area_value = payload.get("area")
         try:
             payload["area"] = float(area_value)
@@ -221,6 +224,9 @@ class REProductController(BaseController):
             return False
 
         return True
+
+    def get_random_product(self, product_option_id):
+        return self.service.get_random_product(product_option_id)
 
 
 class REStatusController(BaseController):

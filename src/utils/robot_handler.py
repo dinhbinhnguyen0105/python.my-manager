@@ -1,14 +1,15 @@
 import queue, io, pycurl, json
-from urllib.parse import urlparse
-from typing import Any, Dict, Optional, Tuple
+from urllib.parse import urlparse, parse_qs
+from typing import Dict
 
 
 def get_proxy(proxy_raw: str) -> Dict:
     buffer = io.BytesIO()
     curl = pycurl.Curl()
+    # https://proxyxoay.shop/api/get.php?key=[keyxoay]&&nhamang=random&&tinhthanh=0
     curl.setopt(pycurl.URL, proxy_raw)
-    curl.setopt(pycurl.CONNECTTIMEOUT, 5)
-    curl.setopt(pycurl.TIMEOUT, 5)
+    curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+    curl.setopt(pycurl.TIMEOUT, 30)
     headers = [
         "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "Accept: application/json, text/plain, */*",
@@ -21,11 +22,14 @@ def get_proxy(proxy_raw: str) -> Dict:
     curl.perform()
     try:
         code = curl.getinfo(pycurl.RESPONSE_CODE)
-        if code != 200:
-            return None
-
         body = buffer.getvalue().decode("utf-8")
         res = json.loads(body)
+        parsed_url = urlparse(proxy_raw)
+        query_params = parse_qs(parsed_url.query)
+        key = query_params.get("key", [None])[0]
+        print(f"{key} - {res.get('proxyhttp', 'Invalid')}")
+        if code != 200:
+            return None
         if res.get("status") != 100 or "proxyhttp" not in res:
             return None
 
@@ -57,16 +61,16 @@ def check_proxy(proxy: str) -> bool:
     buffer = io.BytesIO()
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, "http://httpbin.org/ip")
-    curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
-    curl.setopt(pycurl.CONNECTTIMEOUT, 5)
-    curl.setopt(pycurl.TIMEOUT, 5)
+    curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+    curl.setopt(pycurl.TIMEOUT, 30)
     headers = [
         "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept: application/json",
+        "Accept: application/json, text/plain, */*",
         "Accept-Language: en-US,en;q=0.9",
         "Connection: keep-alive",
     ]
     curl.setopt(pycurl.HTTPHEADER, headers)
+    curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
 
     parsed = urlparse(proxy)
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
@@ -87,7 +91,6 @@ def check_proxy(proxy: str) -> bool:
         body = buffer.getvalue().decode("utf-8")
         data = json.loads(body)
         ip = data.get("origin") or data.get("ip") or "Unknown IP"
-        print(ip)
         return True
 
     except pycurl.error as e:
@@ -97,33 +100,3 @@ def check_proxy(proxy: str) -> bool:
     finally:
         curl.close()
         buffer.close()
-
-
-def fetch_task_data(task_queue: queue.Queue) -> Optional[Dict[str, Any]]:
-    try:
-        raw = task_queue.get(block=True, timeout=1000)
-        task_queue.task_done()
-    except queue.Empty:
-        return None
-    except Exception as e:
-        print("ERROR [fetch_task_data]: ", e)
-    return raw
-
-
-def fetch_proxy_data(
-    proxy_queue: queue.Queue, max_attempts: int = 5
-) -> Optional[Dict[str, Any]]:
-    for attempt in range(max_attempts):
-        try:
-            raw = proxy_queue.get(block=True)
-            proxy_queue.task_done()
-        except queue.Empty:
-            break
-        try:
-            proxy = get_proxy(raw)
-        except Exception:
-            continue
-        if proxy:
-            return proxy
-
-    return None

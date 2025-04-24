@@ -247,27 +247,6 @@ class UserService:
             return query.value(0)
         return None
 
-    # def launch_browser(self, record_ids, is_mobile=False):
-    #     udd_container = UserUDDService.get_selected_udd()
-    #     if not udd_container:
-    #         logger.error("cannot get user data dir container")
-    #         return False
-    #     proxy_records = UserProxyService.read_all()
-    #     if not proxy_records:
-    #         logger.error("cannot get proxy records")
-    #         return False
-    #     proxy_sources = [proxy_record.get("value") for proxy_record in proxy_records]
-
-    #     # thread
-    #     while len(proxy_sources) > 0:
-    #         record_id = record_ids.pop(0)
-    #         proxy = user_handler.get_proxy(proxy_sources.pop(0))
-    #         udd = os.path.abspath(os.path.join(udd_container, str(record_id)))
-    #         ua = UserService.get_ua(record_id, is_mobile)
-    #         # launch browser as worker
-    #         if not record_ids:
-    #             break
-
 
 class UserUDDService(BaseService):
     TABLE_NAME = constants.TABLE_USER_SETTINGS_UDD

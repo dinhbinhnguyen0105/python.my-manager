@@ -80,6 +80,8 @@ def set_network_throttling(page: Page, condition_name: str):
 
 
 def discussion(payload):
+    if not payload.get("proxy"):
+        return
     browser_option = {
         "proxy": payload.get("proxy", None),
         "screen": {"width": 1920, "height": 1080},
@@ -97,42 +99,37 @@ def discussion(payload):
             page = browser_context.new_page()
 
             # set_network_throttling(page, "Slow 3G")
-            # set_network_throttling(page, "Fast 3G")
 
-            page.wait_for_event("close", timeout=0)
+            # page.wait_for_event("close", timeout=0)
 
             action_function = ACTION_MAP["discussion"]
             action_function(
                 page,
-                2,
+                25,
                 {
+                    "title": "[8.0 TRIỆU/THÁNG]CHO THUÊ NHÀ PHỐ CÓ NỘI THẤT CƠ BẢN TẠI ĐÀ LẠT",
                     "description": """
-nhà phố mặt đường đường xe hơi (ID: re.s.551a479b)
-🗺 Vị trí: 3 Tháng 4, Phường 3, Đà Lạt
-+ Có 1 phòng giặt, sân phơi, sân thượng, giếng trời
-+ Sân để xe 7 chỗ trước nhà
+Cho thuê nhà phố ID: re.r.9b486dd3 ️🏆❄
+Đ/c: Phường 5, Đà Lạt
+🛌 Công năng: 1pk, 1 bếp, 2pn
++ Nhà đẹp, sân để xe hơi rộng rãi
++ Gác rộng 30m2
 ------------
-💵 Giá: 6.79tỷ 🎁🌦️
-☎ 0375.155.525 Mr. Bình
-
+💵 Giá: 8.0triệu/tháng 👗🎒
+Lh: 0375.155.525
 ------------------
-Ký gửi mua, bán - cho thuê, thuê bất động sản xin liên hệ 0375.155.525 - Đ. Bình
+Ký gửi mua, bán - cho thuê, thuê bất động sản xin liên hệ 0375.155.525 - Mr. Bình
 ------------------
 
 [
-    pid <re.s.551a479b>
-    updated_at <2025-04-22 06:07:40>
-    published_at <2025-04-23 09:14:37 +07 (+0700)>
+    pid <re.r.9b486dd3>
+    updated_at <2025-04-24 01:46:32>
+    published_at <2025-04-24 09:28:30>
 ]
                     """,
-                    "title": "[6.79 TỶ] BÁN NHÀ PHỐ, NỘI THẤT NỘI THẤT CƠ BẢN Ở ĐÀ LẠT",
                     "images": [
-                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/43/43_0.jpg",
-                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/43/43_1.jpg",
-                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/43/43_2.jpg",
-                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/43/43_3.jpg",
-                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/43/43_4.jpg",
-                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/43/43_5.jpg",
+                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/45/45_0.jpg",
+                        "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/products/re/45/45_1.jpg",
                     ],
                 },
                 QObject(),
@@ -144,13 +141,15 @@ Ký gửi mua, bán - cho thuê, thuê bất động sản xin liên hệ 0375.1
 
 
 if __name__ == "__main__":
+    proxy = get_proxy(
+        "https://proxyxoay.shop/api/get.php?key=XpqQkCrWTuxCQfGrVJNkYq&&nhamang=random&&tinhthanh=0"
+    )
+    print(proxy)
     discussion(
         {
-            # "proxy": get_proxy(
-            #     "https://proxyxoay.shop/api/get.php?key=IHafXUJiELxnkICjKTpOTE&&nhamang=random&&tinhthanh=0"
-            # ),
+            "proxy": proxy,
             # "user_data_dir": "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/users/udd/test",
-            "user_data_dir": "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/users/udd/11",
+            "user_data_dir": "/Volumes/KINGSTON/Dev/python/python.my-manager/repositories/users/udd/10",
             # "user_data_dir": "/Users/ndb/Dev/python/python.my-manager/repositories/users/udd/2",
             "headless": False,
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",

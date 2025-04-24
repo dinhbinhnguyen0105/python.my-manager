@@ -13,50 +13,48 @@ class Ui_PageRobot(object):
     def setupUi(self, PageRobot):
         PageRobot.setObjectName("PageRobot")
         PageRobot.resize(981, 640)
-        PageRobot.setStyleSheet(
-            "#PageRobot{\n"
-            '  font-family: "Courier New";\n'
-            "  background-color: #FFFFFF;\n"
-            "}\n"
-            "QGroupBox {\n"
-            '  font-family: "Courier New";\n'
-            "  font-size: 13px;\n"
-            "  background-color: rgba(248, 249, 250, 1);\n"
-            "}\n"
-            "QLineEdit {\n"
-            "  padding: 4px 0;\n"
-            "  border: 1px solid #ced4da;\n"
-            "  border-radius: 8px;\n"
-            "  margin-left: 8px;\n"
-            "  padding-left: 4px;\n"
-            "  background-color: #FFFFFF;\n"
-            "  color:#212529;\n"
-            "}\n"
-            "QPlainTextEdit {\n"
-            "    background-color: #FFFFFF;\n"
-            "  color:#212529;\n"
-            "}\n"
-            "QLabel {\n"
-            '  font-family: "Courier New";\n'
-            "  font-size: 13px;\n"
-            "  color: rgb(90, 93, 97);\n"
-            "}\n"
-            "QRadioButton {\n"
-            '  font-family: "Courier New";\n'
-            "  font-size: 13px;\n"
-            "  color: #212529;\n"
-            "}\n"
-            "QComboBox {\n"
-            '  font-family: "Courier New";\n'
-            "  font-size: 13px;\n"
-            "  color: #212529;\n"
-            "}\n"
-            "QPushButton {\n"
-            "  color: #212529;\n"
-            "}\n"
-            "\n"
-            ""
-        )
+        PageRobot.setStyleSheet("#PageRobot{\n"
+"  font-family: \"Courier New\";\n"
+"  background-color: #FFFFFF;\n"
+"}\n"
+"QGroupBox {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  background-color: rgba(248, 249, 250, 1);\n"
+"}\n"
+"QLineEdit {\n"
+"  padding: 4px 0;\n"
+"  border: 1px solid #ced4da;\n"
+"  border-radius: 8px;\n"
+"  margin-left: 8px;\n"
+"  padding-left: 4px;\n"
+"  background-color: #FFFFFF;\n"
+"  color:#212529;\n"
+"}\n"
+"QPlainTextEdit {\n"
+"    background-color: #FFFFFF;\n"
+"  color:#212529;\n"
+"}\n"
+"QLabel {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  color: rgb(90, 93, 97);\n"
+"}\n"
+"QRadioButton {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  color: #212529;\n"
+"}\n"
+"QComboBox {\n"
+"  font-family: \"Courier New\";\n"
+"  font-size: 13px;\n"
+"  color: #212529;\n"
+"}\n"
+"QPushButton {\n"
+"  color: #212529;\n"
+"}\n"
+"\n"
+"")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(PageRobot)
         self.horizontalLayout_2.setContentsMargins(8, 8, 8, 8)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
@@ -169,13 +167,16 @@ class Ui_PageRobot(object):
         self.new_action = QtWidgets.QWidget()
         self.new_action.setObjectName("new_action")
         self.tabWidget.addTab(self.new_action, "")
-        # self.tab_2 = QtWidgets.QWidget()
-        # self.tab_2.setObjectName("tab_2")
-        # self.tabWidget.addTab(self.tab_2, "")
         self.actions_container_layout.addWidget(self.tabWidget)
-        self.pushButton = QtWidgets.QPushButton(parent=self.actions_container)
-        self.pushButton.setObjectName("pushButton")
-        self.actions_container_layout.addWidget(self.pushButton)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.save_actions_btn = QtWidgets.QPushButton(parent=self.actions_container)
+        self.save_actions_btn.setObjectName("save_actions_btn")
+        self.horizontalLayout_3.addWidget(self.save_actions_btn)
+        self.run_actions_btn = QtWidgets.QPushButton(parent=self.actions_container)
+        self.run_actions_btn.setObjectName("run_actions_btn")
+        self.horizontalLayout_3.addWidget(self.run_actions_btn)
+        self.actions_container_layout.addLayout(self.horizontalLayout_3)
         self.verticalLayout_2.addLayout(self.actions_container_layout)
         self.container_layout.addWidget(self.actions_container)
         self.horizontalLayout_2.addLayout(self.container_layout)
@@ -190,9 +191,6 @@ class Ui_PageRobot(object):
         self.type_label.setText(_translate("PageRobot", "Type"))
         self.group_label.setText(_translate("PageRobot", "Group"))
         self.note_label.setText(_translate("PageRobot", "Note"))
-        self.tabWidget.setTabText(
-            self.tabWidget.indexOf(self.new_action),
-            _translate("PageRobot", "New action"),
-        )
-        # self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("PageRobot", "Tab 2"))
-        self.pushButton.setText(_translate("PageRobot", "Run"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.new_action), _translate("PageRobot", "New action"))
+        self.save_actions_btn.setText(_translate("PageRobot", "Save"))
+        self.run_actions_btn.setText(_translate("PageRobot", "Run"))

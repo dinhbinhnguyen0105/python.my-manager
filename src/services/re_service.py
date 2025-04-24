@@ -147,6 +147,45 @@ WHERE main.id = :id
         return fetch_single_result(db, sql, {"id": record_id})
 
     @staticmethod
+    def read_by_pid(pid):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        sql = f"""
+SELECT 
+    main.id,
+    main.pid,
+    main.street,
+    main.area,
+    main.structure,
+    main.function,
+    main.description,
+    main.price,
+    main.updated_at,
+    statuses.label_vi AS status,
+    provinces.label_vi AS province,
+    districts.label_vi AS district,
+    wards.label_vi AS ward,
+    options.label_vi AS option,
+    categories.label_vi AS category,
+    building_line_s.label_vi AS building_line,
+    furniture_s.label_vi AS furniture,
+    legal_s.label_vi AS legal,
+    main.created_at,
+    main.updated_at
+FROM {constants.TABLE_RE} main
+JOIN {constants.TABLE_RE_SETTINGS_STATUSES} statuses ON main.status_id = statuses.id
+JOIN {constants.TABLE_RE_SETTINGS_PROVINCES} provinces ON main.province_id = provinces.id
+JOIN {constants.TABLE_RE_SETTINGS_DISTRICTS} districts ON main.district_id = districts.id
+JOIN {constants.TABLE_RE_SETTINGS_WARDS} wards ON main.ward_id = wards.id
+JOIN {constants.TABLE_RE_SETTINGS_OPTIONS} options ON main.option_id = options.id
+JOIN {constants.TABLE_RE_SETTINGS_CATEGORIES} categories ON main.category_id = categories.id
+JOIN {constants.TABLE_RE_SETTINGS_BUILDING_LINES} building_line_s ON main.building_line_id = building_line_s.id
+JOIN {constants.TABLE_RE_SETTINGS_FURNITURES} furniture_s ON main.furniture_id = furniture_s.id
+JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
+WHERE main.pid = :pid
+"""
+        return fetch_single_result(db, sql, {"pid": pid})
+
+    @staticmethod
     def read_raw(record_id):
         db = QSqlDatabase.database(constants.RE_CONNECTION)
         sql = f"""
@@ -353,22 +392,45 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
             os.path.abspath(os.path.join(img_dir_record.get("value"), str(record_id)))
         )
 
-    # def get_random_product(option_id):
-    #     db = QSqlDatabase.database(constants.RE_CONNECTION)
-
-    # @staticmethod
-    # def get_random_template(option_id):
-    #     db = QSqlDatabase.database(constants.RE_CONNECTION)
-    #     query = QSqlQuery(db)
-    #     sql = f"SELECT value FROM {constants.TABLE_RE_SETTINGS_TITLE} WHERE option_id = {option_id} ORDER BY RANDOM() LIMIT 1"
-    #     if not query.prepare(sql):
-    #         logger.error(query.lastError().text())
-    #         return None
-    #     if not exec_query(db, query):
-    #         return None
-    #     if query.next():
-    #         return query.value(0)
-    #     return None
+    @staticmethod
+    def get_random_product(option_id):
+        db = QSqlDatabase.database(constants.RE_CONNECTION)
+        query = QSqlQuery(db)
+        sql = f"""
+SELECT 
+    main.id,
+    main.pid,
+    main.street,
+    main.area,
+    main.structure,
+    main.function,
+    main.description,
+    main.price,
+    main.updated_at,
+    statuses.label_vi AS status,
+    provinces.label_vi AS province,
+    districts.label_vi AS district,
+    wards.label_vi AS ward,
+    options.label_vi AS option,
+    categories.label_vi AS category,
+    building_line_s.label_vi AS building_line,
+    furniture_s.label_vi AS furniture,
+    legal_s.label_vi AS legal,
+    main.created_at,
+    main.updated_at
+FROM {constants.TABLE_RE} main
+JOIN {constants.TABLE_RE_SETTINGS_STATUSES} statuses ON main.status_id = statuses.id
+JOIN {constants.TABLE_RE_SETTINGS_PROVINCES} provinces ON main.province_id = provinces.id
+JOIN {constants.TABLE_RE_SETTINGS_DISTRICTS} districts ON main.district_id = districts.id
+JOIN {constants.TABLE_RE_SETTINGS_WARDS} wards ON main.ward_id = wards.id
+JOIN {constants.TABLE_RE_SETTINGS_OPTIONS} options ON main.option_id = options.id
+JOIN {constants.TABLE_RE_SETTINGS_CATEGORIES} categories ON main.category_id = categories.id
+JOIN {constants.TABLE_RE_SETTINGS_BUILDING_LINES} building_line_s ON main.building_line_id = building_line_s.id
+JOIN {constants.TABLE_RE_SETTINGS_FURNITURES} furniture_s ON main.furniture_id = furniture_s.id
+JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
+WHERE option_id = {option_id} ORDER BY RANDOM() LIMIT 1
+"""
+        return fetch_single_result(db, sql, {"option_id": option_id})
 
 
 class REImageDirService(BaseService):

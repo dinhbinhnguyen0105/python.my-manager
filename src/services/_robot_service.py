@@ -8,7 +8,7 @@ from src.services.user_service import UserService, UserUDDService, UserProxyServ
 from src.utils.logger import log
 
 
-class UserAutomationService(QObject):
+class RobotService(QObject):
     task_status_update = pyqtSignal(int, str)
     task_finished_signal = pyqtSignal(int)
     task_error_signal = pyqtSignal(int, str)
@@ -92,7 +92,8 @@ class UserAutomationService(QObject):
                         "headless": user_info.get("headless"),
                         "user_info": user_info,
                         "action_index": action_index,
-                        "action_info": self.handle_action(user_info, action_info),
+                        # "action_info": self.handle_action(user_info, action_info),
+                        "action_info": action_info,
                     }
                     self._task_queue.put(worker_item)
                     current_batch_size += 1
@@ -104,15 +105,15 @@ class UserAutomationService(QObject):
             # else:
             #     pass
 
-    def handle_action(self, user_info, action_info):
+    def handle_action(self, user_info, worker_info):
         user_type = user_info.get("type")
-        action_name = action_info.get("action_name")
+        action_name = worker_info.get("action_name")
         if action_name == "launch":
             return {
                 "action_name": action_name,
             }
         elif action_name == "discussion":
-            post_info = action_info.get("post_info")
+            post_info = worker_info.get("post_info")
             if post_info == "random":
                 # check in user_prev_discussion
                 # handle option_id with type
@@ -138,7 +139,7 @@ class UserAutomationService(QObject):
                     "description": description,
                     "images": images,
                 },
-                "groups": action_info.get("groups", []),
+                "groups": worker_info.get("groups", []),
             }
 
         elif action_name == "marketplace":
@@ -165,7 +166,7 @@ class UserAutomationService(QObject):
 
     @pyqtSlot(QObject)
     def _handle_worker_finished(self, worker: QObject):
-        log(f"UserAutomationService: Worker {worker} thread finished.")
+        log(f"RobotService: Worker {worker} thread finished.")
         thread = self._running_automation_workers.pop(worker, None)
         if thread:
             thread.quit()
@@ -188,7 +189,7 @@ class UserAutomationService(QObject):
         ):  # Lặp trên bản sao items
             if thread.isRunning():
                 log(
-                    f"UserAutomationService: Requesting interruption for worker {worker} (thread {thread})."
+                    f"RobotService: Requesting interruption for worker {worker} (thread {thread})."
                 )
                 thread.requestInterruption()
 
@@ -202,7 +203,7 @@ if __name__ == "__main__":
     app = QApplication([])
     initialize_user_db()
     initialize_re_db()
-    service = UserAutomationService()
+    service = RobotService()
     service.handle_task(
         task_data_list=[
             {

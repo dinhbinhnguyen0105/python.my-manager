@@ -1,13 +1,15 @@
-from PyQt6.QtWidgets import QMessageBox, QWidget, QMenu, QDialog
+from PyQt6.QtWidgets import QMessageBox, QWidget
 from PyQt6.QtGui import QAction
-from PyQt6.QtCore import Qt, QPoint, QSortFilterProxyModel
+from PyQt6.QtCore import Qt, QSortFilterProxyModel
 from src.models.user_model import UserModel
 from src.models.re_model import REProductModel
-from src.controllers.user_controller import UserController, UserAutomationController
-from src.controllers.re_controller import REProductController
-
+from src.controllers.user_controller import UserController
+from src.controllers.robot_controller import RobotController
+from src.controllers.re_controller import (
+    REProductController,
+)
+from src.views.robot.action import Action
 from src.ui.page_robot_ui import Ui_PageRobot
-from src.ui.action_container_ui import Ui_action_container
 
 
 class PageRobot(QWidget, Ui_PageRobot):
@@ -22,17 +24,19 @@ class PageRobot(QWidget, Ui_PageRobot):
         self.proxy_model.setSourceModel(self.source_model)
         self.user_controller = UserController(self.source_model)
 
-        self.user_actions: list[TabAction] = []
+        self.re_controller = REProductController(REProductModel())
+        self.robot_controller = RobotController()
+
+        self.user_actions: list[Action] = []
+        self.task_data = {}
 
         self.setup_ui()
         self.setup_events()
 
     def setup_events(self):
         self.tabWidget.tabBarDoubleClicked.connect(self.on_add_new_action)
-        # for action_widget in self.user_actions:
-        #     action_widget.
-
-        self.pushButton.clicked.connect(self.on_run_bot)
+        self.run_actions_btn.clicked.connect(self.on_run_bot)
+        self.save_actions_btn.clicked.connect(self.on_save_actions)
 
     def setup_ui(self):
         self.set_table_ui()
@@ -40,8 +44,6 @@ class PageRobot(QWidget, Ui_PageRobot):
     def set_table_ui(self):
         self.users_table.setModel(self.proxy_model)
         self.users_table.setSortingEnabled(True)
-        # self.users_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # self.users_table.customContextMenuRequested.connect(self.show_context_menu)
         self.users_table.setSelectionBehavior(
             self.users_table.SelectionBehavior.SelectRows
         )
@@ -61,122 +63,78 @@ class PageRobot(QWidget, Ui_PageRobot):
     def on_add_new_action(self, index):
         clicked_tab = self.tabWidget.tabText(index)
         if clicked_tab == "New action":
-            new_action = TabAction()
+            new_action = Action()
+            new_action.delete_action_btn.clicked.connect(
+                lambda: self.on_delete_action(new_action)
+            )
             new_action.setObjectName(f"action_{index}")
             self.user_actions.append(new_action)
             self.tabWidget.insertTab(index, new_action, f"Action {index}")
             self.tabWidget.setCurrentIndex(index)
 
-    def on_delete_current_action(self):
-        current_index = self.tabWidget.currentIndex()
-        if (
-            current_index != -1
-            and self.tabWidget.tabText(current_index) != "New action"
-        ):
-            widget_to_remove = self.tabWidget.widget(current_index)
-            self.tabWidget.removeEventFilter(current_index)
-            widget_to_remove.deleteLater()
+    def on_delete_action(self, action_widget: QAction):
+        if action_widget in self.user_actions:
+            self.user_actions.remove(action_widget)
+        action_widget.deleteLater()
+
+    def on_save_actions(self):
+        users = self.get_selected_data()
+        raw_actions = [w.get_fields() for w in self.user_actions]
+        self.task_data = {}
+        for u in users:
+            utask = self.robot_controller.build_task(u, raw_actions)
+            self.task_data[utask.user_id] = utask
+        QMessageBox.information(self, "Lưu thành công", "Đã lưu action cho người dùng.")
 
     def on_run_bot(self):
-        # self.user_actions
-        actions = []
-        for user_action in self.user_actions:
-            actions.append(user_action.get_fields())
+        self.robot_controller.discussion(self.task_data)
 
-        print(actions)
+    def get_selected_ids(self):
+        selected_rows = self.users_table.selectionModel().selectedRows()
+        selected_ids = []
+        id_column_index = self.source_model.fieldIndex("id")
 
+        for proxy_index in selected_rows:
+            source_index = self.proxy_model.mapToSource(proxy_index)
+            if source_index.isValid():
+                id_data = self.source_model.data(
+                    source_index.siblingAtColumn(id_column_index),
+                    Qt.ItemDataRole.DisplayRole,
+                )
+                selected_ids.append(id_data)
+        return selected_ids
 
-class TabAction(QWidget, Ui_action_container):
+    def get_selected_data(self):
+        selected_rows = self.users_table.selectionModel().selectedRows()
+        selected_data = []
+        column_count = self.source_model.columnCount()
+        headers = [
+            self.source_model.headerData(
+                col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole
+            )
+            for col in range(column_count)
+        ]
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowTitle("Action_container")
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        for proxy_index in selected_rows:
+            source_index = self.proxy_model.mapToSource(proxy_index)
+            if source_index.isValid():
+                row_data = {}
+                for col in range(column_count):
+                    cell_index = self.source_model.index(source_index.row(), col)
 
-        self.action_values = {"name": None, "content": None, "product_init": None}
-
-        self.setup_ui()
-        self.setup_events()
-
-    def setup_ui(self):
-        self.interaction_container.setHidden(True)
-        self.post_container.setHidden(True)
-        self.details_container_w.setHidden(True)
-        self.pid_input.setHidden(True)
-        self.set_action_name_ui()
-
-    def set_action_name_ui(self):
-        self.action_name.clear()
-        self.action_name.addItem("Marketplace", "marketplace")
-        self.action_name.addItem("Discussion", "discussion")
-        self.action_name.addItem("Interaction", "interaction")
-        self.action_name.setCurrentIndex(-1)
-
-    def set_action_name_ui_and_value(self):
-        action_name = self.action_name.currentData()
-        self.action_values["name"] = action_name
-        self.post_container.setHidden(
-            False
-            if action_name != "marketplace" or action_name != "discussion"
-            else True
-        )
-        self.interaction_container.setHidden(
-            True
-            if action_name != "marketplace" or action_name != "discussion"
-            else False
-        )
-
-        self.post_container.setHidden(True if action_name == "interaction" else False)
-        self.interaction_container.setHidden(
-            False if action_name == "interaction" else True
-        )
-
-    def set_action_content_ui(self, product_type):
-        if product_type == "manual":
-            self.action_values["content"] = {
-                "images": [],
-                "title": "",
-                "descriptiont": "",
-            }
-            self.details_container_w.setHidden(False)
-            self.pid_input.setHidden(True)
-            self.action_values["product_init"] = "manual"
-        elif product_type == "random":
-            self.action_values["content"] = ""
-            self.details_container_w.setHidden(True)
-            self.pid_input.setHidden(False)
-            self.action_values["product_init"] = "random"
-        elif product_type == "pid":
-            self.action_values["content"] = ""
-            self.details_container_w.setHidden(True)
-            self.pid_input.setHidden(False)
-            self.action_values["product_init"] = "pid"
-
-    def setup_events(self):
-        self.action_name.currentIndexChanged.connect(self.set_action_name_ui_and_value)
-        self.random_radio.clicked.connect(lambda: self.set_action_content_ui("random"))
-        self.pid_radio.clicked.connect(lambda: self.set_action_content_ui("pid"))
-        self.manual_radio.clicked.connect(lambda: self.set_action_content_ui("manual"))
-
-    def get_fields(self):
-        if (
-            self.action_values["name"] == "discussion"
-            or self.action_values["name"] == "marketplace"
-        ):
-            if (
-                self.action_values["product_init"] == "random"
-                or self.action_values["product_init"] == "pid"
-            ):
-                self.action_values["content"] = self.pid_input.text()
-            if self.action_values["product_init"] == "manual":
-                self.action_values["content"] = {
-                    "title": self.title_input.text(),
-                    "description": self.description_input.toPlainText(),
-                    # "images": self.image_input.text(),
-                }
-
-        return self.action_values
+                    if cell_index.isValid():
+                        data = self.source_model.data(
+                            cell_index, Qt.ItemDataRole.DisplayRole
+                        )
+                        header_key = (
+                            headers[col]
+                            if headers[col] is not None
+                            else f"Column_{col}"
+                        )
+                        row_data[str(header_key)] = data
+                if row_data:
+                    selected_data.append(row_data)
+        return selected_data
 
 
 if __name__ == "__main__":

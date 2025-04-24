@@ -308,24 +308,30 @@ QPushButton {
           </property>
           <item>
            <widget class="QTabWidget" name="tabWidget">
-            <widget class="QWidget" name="tab">
+            <widget class="QWidget" name="new_action">
              <attribute name="title">
-              <string>Tab 1</string>
-             </attribute>
-            </widget>
-            <widget class="QWidget" name="tab_2">
-             <attribute name="title">
-              <string>Tab 2</string>
+              <string>New action</string>
              </attribute>
             </widget>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="text">
-             <string>Run</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QPushButton" name="save_actions_btn">
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="run_actions_btn">
+              <property name="text">
+               <string>Run</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>

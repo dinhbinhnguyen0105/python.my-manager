@@ -25,6 +25,13 @@ def get_images_in_directory(image_dir):
     return images
 
 
+def is_images_existed(image_paths):
+    for image_path in image_paths:
+        if not os.path.exists(image_path):
+            return False
+    return True
+
+
 def delete_dir(dir_path):
     dir_path = os.path.abspath(dir_path)
     if not os.path.exists(dir_path):
