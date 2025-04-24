@@ -1,11 +1,8 @@
-# src/services/robot_service.py
-
 import os
-from itertools import islice
+import queue
 from typing import List, Dict, Any
 
-from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool, QEventLoop
-
+from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 from src.robot.browser_worker import TaskRunnable, WorkerSignals
 from src.services.user_service import UserService, UserUDDService, UserProxyService
 
@@ -18,81 +15,82 @@ class RobotService(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        # Tạo global pool, nhưng số thread sẽ set lại theo batch
+        # Thread pool (pool chỉ quản lý thread, không giới hạn runnable)
         self.pool = QThreadPool.globalInstance()
 
-        # Các service phụ trợ
+        # Services phụ trợ
         self.user_service = UserService()
         self.udd_service = UserUDDService()
         self.proxy_service = UserProxyService()
 
-        # Danh sách proxy gốc
+        # Load danh sách proxy
         proxy_records = self.proxy_service.read_all()
-        self.proxy_sources = [r.get("value") for r in proxy_records]
+        self.proxy_queue = queue.Queue()
+        for r in proxy_records:
+            self.proxy_queue.put(r.get("value"))
 
-        # Thư mục user-data-dir
-        self.udd_container_path = os.path.abspath(self.udd_service.get_selected_udd())
+        # Đường dẫn UDD
+        self.udd_path = os.path.abspath(self.udd_service.get_selected_udd())
+
+        # Hàng đợi chứa các công việc chưa chạy
+        self.pending_tasks: List[Dict[str, Any]] = []
+        self.running_count = 0
 
     @pyqtSlot(list, bool)
     def handle_task(self, task_data_list: List[Dict[str, Any]], headless: bool):
-        # 1) Chuẩn bị toàn bộ list công việc (user+action)
-        jobs: List[Dict[str, Any]] = []
+        # 1) Xây danh sách pending_tasks
+        self.pending_tasks.clear()
+        while not self.proxy_queue.empty():
+            self.proxy_queue.get()  # đảm bảo queue rỗng
+        for p in self.proxy_service.read_all():
+            self.proxy_queue.put(p.get("value"))
+
         for task_item in task_data_list:
             user = task_item["user_info"]
-            user["udd"] = os.path.join(self.udd_container_path, str(user["id"]))
+            user["udd"] = os.path.join(self.udd_path, str(user["id"]))
             user["headless"] = headless
-
             for idx, action in enumerate(task_item.get("actions", [])):
-                jobs.append(
-                    {
-                        "user_info": user,
-                        "action_info": action,
-                    }
-                )
+                self.pending_tasks.append({"user_info": user, "action_info": action})
 
-        # 2) Batch size = số proxy
-        n_proxy = len(self.proxy_sources)
-        if n_proxy == 0:
-            # fallback: chạy tuần tự không proxy
-            n_proxy = 1
+        # 2) Khởi chạy tối đa len(proxy) tasks ban đầu
+        initial = min(self.proxy_queue.qsize(), len(self.pending_tasks))
+        for _ in range(initial):
+            self._start_next_task()
 
-        # Helper chia list thành các nhóm cỡ n
-        def chunked(lst, n):
-            for i in range(0, len(lst), n):
-                yield lst[i : i + n]
+    def _start_next_task(self):
+        # Lấy task và proxy tiếp theo
+        work = self.pending_tasks.pop(0)
+        proxy_cfg = self.proxy_queue.get()  # block nếu queue rỗng
+        work["proxy_config"] = proxy_cfg
 
-        # 3) Chạy từng batch
-        for batch in chunked(jobs, n_proxy):
-            # Điều chỉnh pool size cho batch này
-            self.pool.setMaxThreadCount(len(batch))
+        # Prepare signals
+        signals = WorkerSignals()
+        signals.status.connect(self.task_status_update)
+        signals.error.connect(self.task_error_signal)
+        signals.finished.connect(self._on_task_finished)
 
-            # Tạo QEventLoop phụ để chờ batch xong
-            loop = QEventLoop()
-            remaining = len(batch)
+        # Tạo và chạy runnable
+        runnable = TaskRunnable(work, signals)
+        self.running_count += 1
+        self.pool.start(runnable)
 
-            def _on_finished(user_id):
-                nonlocal remaining
-                remaining -= 1
-                if remaining == 0:
-                    loop.quit()
+    def _on_task_finished(self, user_id: int):
+        # 1) Thả proxy trở lại pool
+        # (lấy nó từ work_item có thể cần store phía runnable,
+        #  nhưng ở đây runnable emit không mang proxy, nên chúng ta
+        #  đã embed proxy trong work và nó được giữ trong TaskRunnable
+        #  nếu cần, bạn có thể emit proxy qua signal hoặc lưu tạm)
+        # Giả sử TaskRunnable emit proxy qua một thuộc tính last_proxy:
+        last_proxy = getattr(self, "_last_proxy", None)
+        if last_proxy:
+            self.proxy_queue.put(last_proxy)
 
-            # Với mỗi job trong batch, lấy proxy tương ứng và tạo Runnable
-            for idx, work in enumerate(batch):
-                proxy_cfg = self.proxy_sources[idx % n_proxy]
-                work["proxy_config"] = proxy_cfg
+        # 2) Đếm task đã chạy xong
+        self.running_count -= 1
 
-                signals = WorkerSignals()
-                signals.status.connect(self.task_status_update)
-                signals.error.connect(self.task_error_signal)
-                signals.finished.connect(self.task_finished_signal)
-                signals.finished.connect(_on_finished)
-
-                runnable = TaskRunnable(work, signals)
-                self.pool.start(runnable)
-
-            # 4) Chờ batch hoàn thành
-            loop.exec()
-
-        # 5) Tất cả batch xong
-        self.all_tasks_completed.emit()
+        # 3) Nếu vẫn còn pending, chạy tiếp
+        if self.pending_tasks:
+            self._start_next_task()
+        # 4) Nếu không còn pending và không còn running, emit completed
+        elif self.running_count == 0:
+            self.all_tasks_completed.emit()
