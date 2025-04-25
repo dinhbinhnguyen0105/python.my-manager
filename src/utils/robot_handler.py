@@ -27,23 +27,23 @@ def get_proxy(proxy_raw: str) -> Dict:
         parsed_url = urlparse(proxy_raw)
         query_params = parse_qs(parsed_url.query)
         key = query_params.get("key", [None])[0]
-        print(f"{key} - {res.get('proxyhttp', 'Invalid')}")
         if code != 200:
+            print(f"{key} - {res.get('proxyhttp', 'Invalid')}")
             return None
         if res.get("status") != 100 or "proxyhttp" not in res:
+            print(f"{key} - {res.get('proxyhttp', 'Invalid')}")
             return None
 
         raw = res["proxyhttp"]
         ip, port, user, pwd = raw.split(":", 3)
         proxy_url = f"http://{user}:{pwd}@{ip}:{port}"
-        if not check_proxy(proxy_url):
-            return None
-
         return {
             "username": user,
             "password": pwd,
             "server": f"{ip}:{port}",
         }
+        if not check_proxy(proxy_url):
+            return None
 
     except pycurl.error as e:
         errno, errstr = e.args

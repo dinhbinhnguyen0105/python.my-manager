@@ -1,181 +1,205 @@
-from dataclasses import dataclass, asdict
-from typing import Optional, Dict, Any
+# src/controllers/robot_controller.py
+
+import sys, traceback
+from typing import Any, Optional, Dict, Union, List
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
-from src.services.robot_service import RobotService
+
+from src.my_types import BrowserInfo, ActionInfo, TaskInfo
 from src.services.re_service import (
     RETemplateTitleService,
     RETemplateDescriptionService,
     REProductService,
 )
+from src.services.user_service import UserService
+from src.services.robot_service import RobotService
+
 from src.utils.re_product_handler import (
     replace_keywords,
     init_footer,
 )
 
 
-@dataclass
-class PostActionInfo:
-    action_name: str
-    title: str
-    description: str
-    images: list[str]
-
-
-@dataclass
-class PostTask:
-    user_id: int
-    user_info: dict
-    actions: list[PostActionInfo]
-
-
 class RobotController:
-    task_status_update_signal = pyqtSignal(int, str)
-    task_finished_signal = pyqtSignal(int)
-    task_error_signal = pyqtSignal(int, str)
-
     def __init__(self):
-        self.robot_service = RobotService()
+        self.user_service = UserService()
         self.re_title_temp_service = RETemplateTitleService()
         self.re_description_temp_service = RETemplateDescriptionService()
         self.re_product_service = REProductService()
 
-    @pyqtSlot(list, bool)
     def launch_browser(
-        self, record_data: list, is_mobile: bool = False, headless: bool = False
+        self,
+        list_user_info: list[Any],
+        is_mobile: bool = False,
+        headless: bool = False,
+        thread_num: int = 1,
     ):
-        if not record_data:
-            return
-        task_data = []
-        for record in record_data:
-            task_data.append(
-                {
-                    "user_info": {
-                        "id": record.get("id"),
-                        "type": record.get("type"),
-                        "ua": (
-                            record.get("mobile_ua")
-                            if is_mobile
-                            else record.get("desktop_ua")
-                        ),
-                    },
-                    "actions": [{"action_name": "launch"}],
-                    "headless": headless,
-                }
+        tasks = []
+        for user_info in list_user_info:
+            action_info: ActionInfo = ActionInfo(action_name="launch")
+            browser_info: BrowserInfo = BrowserInfo(
+                user_id=user_info.get("id"),
+                user_data_dir=self.user_service.get_udd(user_info.get("id")),
+                user_agent=(
+                    user_info.get("mobile_ua")
+                    if is_mobile
+                    else user_info.get("desktop_ua")
+                ),
+                headless=headless,
             )
-        self.robot_service.handle_task(task_data_list=task_data)
+            task_info = TaskInfo(browser_info=browser_info, action=action_info)
+            tasks.append(task_info)
+        self.robot_service = RobotService(thread_num=thread_num, max_retries=5)
+        self.robot_service.add_tasks(tasks=tasks)
 
-    @pyqtSlot(list, bool)
-    def discussion(self, post_tasks: dict[PostTask], headless=False):
-        task_data = []
-        is_mobile = False
-        for post_task in post_tasks.values():
-            post_task.user_info["ua"] = (
-                post_task.user_info.get("mobile_ua")
-                if is_mobile
-                else post_task.user_info.get("desktop_ua")
-            )
-            task_data.append(
-                {
-                    "user_info": post_task.user_info,
-                    "actions": [asdict(action) for action in post_task.actions],
-                    "headless": headless,
-                }
-            )
-        # for task in task_data:
-        #     print(task.get("actions"))
-        self.robot_service.handle_task(task_data, headless)
+    def discussion(
+        self,
+        task_data: List,
+        is_mobile: bool = False,
+        headless: bool = False,
+        thread_num: int = 1,
+    ):
+        tasks: List[TaskInfo] = []
+        max_action_num = max(
+            (len(task.get("actions", [])) for task in task_data), default=0
+        )
+        for action_num in range(max_action_num):
+            for task in task_data:
+                user_info = task["user_info"]
+                browser_info: BrowserInfo = BrowserInfo(
+                    user_id=user_info.get("id"),
+                    user_data_dir=self.user_service.get_udd(user_info.get("id")),
+                    user_agent=(
+                        user_info.get("mobile_ua")
+                        if is_mobile
+                        else user_info.get("desktop_ua")
+                    ),
+                    headless=headless,
+                )
+                try:
+                    action_info: ActionInfo = task.get("actions").pop()
+                except:
+                    action_info = ActionInfo(action_name="<empty>")
+                tasks.append(TaskInfo(browser_info=browser_info, action=action_info))
 
-    def build_task(self, user: Dict[str, Any], raw_actions: list[Dict[str, Any]]):
-        tasks: list[PostActionInfo] = []
-        for action in raw_actions:
-            name = action["action_name"]
-            mode = action["mode"]
-            content = action["content"]
+        self.robot_service = RobotService(thread_num=thread_num, max_retries=5)
+        self.robot_service.add_tasks(tasks=tasks)
+
+    def build_task(self, user: Dict, action_data: list[Dict[str, Any]]):
+        list_action_info: list[ActionInfo] = []
+        for action in action_data:
+            name = action.get("action_name", "<unknown>")
+            mode = action.get("mode", "<unknown>")
+            content = action.get("content", {})
             if name in ("discussion", "marketplace"):
                 if mode == "manual":
-                    data = content or {}
-                    tasks.append(
-                        PostActionInfo(
-                            action_name=name,
-                            title=data.get("title"),
-                            description=data.get("description", ""),
-                            images=self.convert_string_to_list(data.get("images", [])),
-                        )
+                    action_info = ActionInfo(
+                        action_name=name,
+                        images_path=self._convert_img_str_to_list(
+                            content.get("image_paths")
+                        ),
+                        title=content.get("title"),
+                        description=content.get("description"),
                     )
+                    list_action_info.append(action_info)
                     continue
-
-                product = self._fetch_product(user, action)
+                product = None
+                if mode == "pid":
+                    product = self._fetch_product(
+                        action_mode=mode, action_content=content, user_type=None
+                    )
+                if mode == "random":
+                    product = self._fetch_product(
+                        action_mode=mode,
+                        action_content=None,
+                        user_type=user.get("type"),
+                    )
                 if not product:
                     continue
                 pid_part = product.get("pid").split(".")
-                option_id = (
-                    1 if pid_part[1] == "s" else 2 if pid_part[1] == "r" else None
-                )
-                if not option_id:
-                    continue
-                title_tpl = self.re_title_temp_service.get_random_template(option_id)
-                desc_tpl = self.re_description_temp_service.get_random_template(
-                    option_id
-                )
-                title = replace_keywords(product, title_tpl).upper()
-                description = (
-                    f"{title}\n"
-                    f"{replace_keywords(product, desc_tpl)}\n"
-                    f"{init_footer(product.get('pid'), product.get('updated_at'))}"
-                )
-                images = self.re_product_service.get_images(product.get("id"))
-                tasks.append(PostActionInfo(name, title, description, images))
-        return PostTask(user.get("id"), user_info=user, actions=tasks)
+                if pid_part[0] == "re":
+                    option_id = (
+                        1
+                        if pid_part[1] == "s"
+                        else (
+                            2
+                            if pid_part[1] == "r"
+                            else 3 if pid_part[1] == "a" else None
+                        )
+                    )
+                    title_tpl = self.re_title_temp_service.get_random_template(
+                        option_id
+                    )
+                    desc_tpl = self.re_description_temp_service.get_random_template(
+                        option_id
+                    )
+                    title = replace_keywords(product, title_tpl).upper()
+                    description = (
+                        f"{title}\n"
+                        f"{replace_keywords(product, desc_tpl)}\n"
+                        f"{init_footer(product.get('pid'), product.get('updated_at'))}"
+                    )
+                    image_paths = self.re_product_service.get_images(product.get("id"))
+                    list_action_info.append(
+                        ActionInfo(
+                            action_name=name,
+                            images_path=image_paths,
+                            title=title,
+                            description=description,
+                        )
+                    )
+                else:
+                    raise Exception("Invalid template for ", pid_part[0])
+        return {
+            "user_id": user.get("id"),
+            "user_info": user,
+            "actions": list_action_info,
+        }
 
     def _fetch_product(
-        self, user: Dict[str, Any], action: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
-        name = action.get("action_name")
-        mode = action.get("mode")
-        content = action.get("content")
-        if name not in ("marketplace", "discussion"):
+        self,
+        action_mode: str,
+        action_content: Union[str, None],
+        user_type: Union[str, None],
+    ):
+        try:
+            user_type_part = user_type.lower().strip().split(".")
+            product_table_name = user_type_part[0]
+            product_option = user_type_part[1] if len(user_type_part) > 1 else None
+            product_info = None
+            if action_mode.lower() == "random":
+                if product_table_name == "re":
+                    option_id = (
+                        1
+                        if product_option == "s"
+                        else (
+                            2
+                            if product_option == "r"
+                            else 3 if product_option == "a" else None
+                        )
+                    )
+                    if not option_id:
+                        raise ValueError("Invalid product_option")
+                    return self.re_product_service.get_random_product(option_id)
+
+                # TODO: implement misc or other product types
+                raise ValueError("Invalid product_table_name")
+
+            if action_mode.lower() == "pid":
+                pid_part = action_content.lower().strip().split(".")
+                product_table_name = pid_part[0]
+                if product_table_name == "re":
+                    return self.re_product_service.read_by_pid(action_content)
+                # TODO : implement misc or other product types
+                raise ValueError("Invalid product category.")
+        except ValueError as e:
+            print(e)
             return None
 
-        # Phân tích user type
-        user_type = str(user.get("type", "")).lower().strip()
-        parts = user_type.split(".")
-        product_name = parts[0]
-        product_action = parts[1] if len(parts) > 1 else None
-
-        # Random mode
-        if mode == "random":
-            if product_name == "re":
-                option_id = (
-                    1 if product_action == "s" else 2 if product_action == "r" else None
-                )
-                return (
-                    self.re_product_service.get_random_product(option_id)
-                    if option_id
-                    else None
-                )
-            # TODO: implement misc or other product types
-            return None
-
-        # PID mode
-        if mode == "pid":
-            pid_str = str(content or "").strip()
-            parts = pid_str.split(".")
-            prod_name = parts[0].lower().strip()
-            pid = parts[1] if len(parts) > 1 else pid_str
-
-            if prod_name == "re":
-                return self.re_product_service.read_by_pid(pid)
-            # TODO: implement misc or other product types
-            return None
-
-        return None
-
-    def convert_string_to_list(self, input_string):
+    def _convert_img_str_to_list(self, input_string):
         if not input_string or input_string.strip() == "":
             return []
 
         parts = input_string.split(",")
-
         result_list = []
         for part in parts:
             cleaned_part = part.strip()

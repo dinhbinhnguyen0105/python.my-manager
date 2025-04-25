@@ -80,14 +80,18 @@ class PageRobot(QWidget, Ui_PageRobot):
     def on_save_actions(self):
         users = self.get_selected_data()
         raw_actions = [w.get_fields() for w in self.user_actions]
-        self.task_data = {}
-        for u in users:
-            utask = self.robot_controller.build_task(u, raw_actions)
-            self.task_data[utask.user_id] = utask
+        for user in users:
+            user_task = self.robot_controller.build_task(user, raw_actions)
+            self.task_data[user_task.get("user_id")] = user_task
         QMessageBox.information(self, "Lưu thành công", "Đã lưu action cho người dùng.")
 
     def on_run_bot(self):
-        self.robot_controller.discussion(self.task_data)
+        self.robot_controller.discussion(
+            self.task_data.values(),
+            is_mobile=False,
+            headless=False,
+            thread_num=4,
+        )
 
     def get_selected_ids(self):
         selected_rows = self.users_table.selectionModel().selectedRows()

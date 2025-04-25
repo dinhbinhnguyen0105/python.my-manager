@@ -28,7 +28,6 @@ class PageRE(QWidget, Ui_PageRE):
         self.setupUi(self)
         self.setWindowTitle("Real Estate Product")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setFixedSize(self.size())
         self.source_model = REProductModel()
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.source_model)

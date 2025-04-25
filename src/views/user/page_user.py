@@ -157,7 +157,9 @@ class PageUser(QWidget, Ui_User):
             )
             print("PageUser: No users selected.")
             return
-        self.user_automation_controller.launch_browser(record_data, is_mobile, headless)
+        self.user_automation_controller.launch_browser(
+            record_data, is_mobile, headless, thread_num=len(record_data)
+        )
 
     def handle_check_status(self):
         pass

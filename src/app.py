@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget
 from src.ui.mainwindow_ui import Ui_MainWindow
 from src.views.user.page_user import PageUser
 from src.views.re.page_re import PageRE
+from src.views.robot.page_robot import PageRobot
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -13,12 +14,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowTitle("My manager")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         # self.setFixedSize(self.size())
+        # 540, 960
+        self.setMinimumSize(960, 540)
 
         self.page_re = PageRE()
         self.page_user = PageUser()
+        self.page_robot = PageRobot()
 
         self.content_container.addWidget(self.page_re)
         self.content_container.addWidget(self.page_user)
+        self.content_container.addWidget(self.page_robot)
+
+        self.content_container.setCurrentWidget(self.page_user)
 
         self.setup_events()
 
@@ -31,4 +38,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         self.sidebar_user_btn.clicked.connect(
             lambda: self.content_container.setCurrentWidget(self.page_user)
+        )
+        self.sidebar_robot_btn.clicked.connect(
+            lambda: self.content_container.setCurrentWidget(self.page_robot)
         )

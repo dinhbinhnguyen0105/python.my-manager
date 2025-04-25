@@ -84,7 +84,7 @@ class Action(QWidget, Ui_action_container):
             self.action_values["content"] = {
                 "title": "",
                 "description": "",
-                "images": "",
+                "image_paths": "",
             }
         else:
             self.action_values["content"] = {}
@@ -98,7 +98,7 @@ class Action(QWidget, Ui_action_container):
             content = {
                 "title": self.title_input.text(),
                 "description": self.description_input.toPlainText(),
-                "images": self.images_input.text(),
+                "image_paths": self.images_input.text(),
             }
         else:
             content = {}

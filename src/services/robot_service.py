@@ -1,96 +1,111 @@
-import os
-import queue
-from typing import List, Dict, Any
+# src/services/robot_service.py
+import time
+from collections import deque
+from typing import Tuple
+from PyQt6.QtCore import QThreadPool, QObject, pyqtSignal, pyqtSlot, Qt
 
-from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
-from src.robot.browser_worker import TaskRunnable, WorkerSignals
-from src.services.user_service import UserService, UserUDDService, UserProxyService
+from src.services.user_service import UserProxyService
+from src.robot.browser_worker import BrowserWorker
+from src.my_types import TaskInfo
 
 
 class RobotService(QObject):
-    task_status_update = pyqtSignal(int, str)
-    task_finished_signal = pyqtSignal(int)
-    task_error_signal = pyqtSignal(int, str)
-    all_tasks_completed = pyqtSignal()
+    def __init__(self, thread_num=1, max_retries=2):
+        super(RobotService, self).__init__()
+        self.available_proxies = deque(UserProxyService.get_proxies())
+        self.pending_task = deque()
+        self.task_in_progress = {}
+        self.max_retries = max_retries
+        self.total_tasks_initial = 0
+        self.tasks_succeeded_count = 0
+        self.task_failed_perm_count = 0
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        # Thread pool (pool chỉ quản lý thread, không giới hạn runnable)
-        self.pool = QThreadPool.globalInstance()
+        self.threadpool = QThreadPool.globalInstance()
+        max_thread_num = self.threadpool.maxThreadCount()
+        if max_thread_num < thread_num:
+            self.threadpool
+        thread_num = min(
+            thread_num, self.threadpool.maxThreadCount(), len(self.available_proxies)
+        )
+        self.threadpool.setMaxThreadCount(thread_num)
+        print(f"JobManager initialized. Max threads: {thread_num}")
 
-        # Services phụ trợ
-        self.user_service = UserService()
-        self.udd_service = UserUDDService()
-        self.proxy_service = UserProxyService()
+    @pyqtSlot(list)
+    def add_tasks(self, tasks: list[TaskInfo]):
+        for task in tasks:
+            self.pending_task.append((task, 0))
+        self.total_tasks_initial += len(tasks)
+        # TODO emit_status_update
+        # TODO emit message
+        self.try_start_tasks()
 
-        # Load danh sách proxy
-        proxy_records = self.proxy_service.read_all()
-        self.proxy_queue = queue.Queue()
-        for r in proxy_records:
-            self.proxy_queue.put(r.get("value"))
+    @pyqtSlot()
+    def try_start_tasks(self):
+        while self.pending_task and self.available_proxies:
+            proxy = self.available_proxies.popleft()
+            task_with_retry = self.pending_task.popleft()
+            task_info: TaskInfo = task_with_retry[0]
+            retry: int = task_with_retry[1]
 
-        # Đường dẫn UDD
-        self.udd_path = os.path.abspath(self.udd_service.get_selected_udd())
+            worker = BrowserWorker(
+                task_info=task_info,
+                retry_count=retry,
+                proxy_raw=proxy,
+            )
 
-        # Hàng đợi chứa các công việc chưa chạy
-        self.pending_tasks: List[Dict[str, Any]] = []
-        self.running_count = 0
+            worker.signals.finished.connect(self.on_worker_finished)
+            worker.signals.log_message.connect(self.on_log_message)
+            worker.signals.error.connect(self.on_worker_error)
 
-    @pyqtSlot(list, bool)
-    def handle_task(self, task_data_list: List[Dict[str, Any]], headless: bool):
-        # 1) Xây danh sách pending_tasks
-        self.pending_tasks.clear()
-        while not self.proxy_queue.empty():
-            self.proxy_queue.get()  # đảm bảo queue rỗng
-        for p in self.proxy_service.read_all():
-            self.proxy_queue.put(p.get("value"))
+            self.task_in_progress[proxy] = (task_with_retry, worker)
 
-        for task_item in task_data_list:
-            user = task_item["user_info"]
-            user["udd"] = os.path.join(self.udd_path, str(user["id"]))
-            user["headless"] = headless
-            for idx, action in enumerate(task_item.get("actions", [])):
-                self.pending_tasks.append({"user_info": user, "action_info": action})
+            self.threadpool.start(worker)
+            # self._emit_status_update()
 
-        # 2) Khởi chạy tối đa len(proxy) tasks ban đầu
-        initial = min(self.proxy_queue.qsize(), len(self.pending_tasks))
-        for _ in range(initial):
-            self._start_next_task()
+    @pyqtSlot(TaskInfo, int, str)
+    def on_worker_finished(self, task: TaskInfo, retry: int, proxy: str):
+        # task: TaskInfo = task
+        # retry: int = retry
+        # TODO emit to controller
+        print(f"[{task.browser_info.user_id}] Finished.")
+        if proxy in self.task_in_progress:
+            del self.task_in_progress[proxy]
+        self.available_proxies.append(proxy)
+        # TODO emit to controller
+        self.tasks_succeeded_count += 1
+        # TODO emit to controller
+        # self._emit_status_update()
+        if self.check_if_done():
+            return True
+        self.try_start_tasks()
 
-    def _start_next_task(self):
-        # Lấy task và proxy tiếp theo
-        work = self.pending_tasks.pop(0)
-        proxy_cfg = self.proxy_queue.get()  # block nếu queue rỗng
-        work["proxy_config"] = proxy_cfg
+    @pyqtSlot(str)
+    def on_log_message(self, str):
+        print(str)
 
-        # Prepare signals
-        signals = WorkerSignals()
-        signals.status.connect(self.task_status_update)
-        signals.error.connect(self.task_error_signal)
-        signals.finished.connect(self._on_task_finished)
+    @pyqtSlot(TaskInfo, int, str)
+    def on_worker_error(self, task_info: TaskInfo, retry: int, message: str):
+        print(f"[on_worker_error] {message}")
+        if retry < self.max_retries:
+            new_task_retry = (task_info, retry + 1)
+            self.pending_task.append(new_task_retry)
+            # TODO emit to controller
+            print(f"[{task_info.browser_info.user_id}] Retry  time ({retry}).")
+            # call
+        else:
+            self.task_failed_perm_count += 1
+            # TODO emit to controller
+            print(f"Failed permanently after {retry} time.")
 
-        # Tạo và chạy runnable
-        runnable = TaskRunnable(work, signals)
-        self.running_count += 1
-        self.pool.start(runnable)
+    def _emit_status_update(self):
+        # TODO emit to controller
+        print("_emi_status_update")
+        pass
 
-    def _on_task_finished(self, user_id: int):
-        # 1) Thả proxy trở lại pool
-        # (lấy nó từ work_item có thể cần store phía runnable,
-        #  nhưng ở đây runnable emit không mang proxy, nên chúng ta
-        #  đã embed proxy trong work và nó được giữ trong TaskRunnable
-        #  nếu cần, bạn có thể emit proxy qua signal hoặc lưu tạm)
-        # Giả sử TaskRunnable emit proxy qua một thuộc tính last_proxy:
-        last_proxy = getattr(self, "_last_proxy", None)
-        if last_proxy:
-            self.proxy_queue.put(last_proxy)
-
-        # 2) Đếm task đã chạy xong
-        self.running_count -= 1
-
-        # 3) Nếu vẫn còn pending, chạy tiếp
-        if self.pending_tasks:
-            self._start_next_task()
-        # 4) Nếu không còn pending và không còn running, emit completed
-        elif self.running_count == 0:
-            self.all_tasks_completed.emit()
+    def check_if_done(self):
+        if (
+            self.tasks_succeeded_count + self.task_failed_perm_count
+            == self.total_tasks_initial
+        ):
+            if not self.pending_task and not self.task_in_progress:
+                return True

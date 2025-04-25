@@ -1,10 +1,15 @@
-import time
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from PyQt6.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
+# src/robot/browser_worker.py
+import time, traceback, sys
+from typing import Any, Tuple
+from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, pyqtSlot, Qt
+from playwright.sync_api import sync_playwright
+from undetected_playwright import Tarnished
+from playwright_stealth import stealth_sync
 
+from src.my_types import TaskInfo
 from src.utils.robot_handler import get_proxy
 from src.robot.browser_actions import ACTION_MAP
-from src.utils.logger import log
+
 
 PLAYWRIGHT_ARGS = [
     "--disable-blink-features=AutomationControlled",
@@ -15,53 +20,95 @@ PLAYWRIGHT_ARGS = [
 
 
 class WorkerSignals(QObject):
-    status = pyqtSignal(int, str)
-    error = pyqtSignal(int, str)
-    # Đổi lại finished mang theo proxy để service có thể trả về pool
-    finished = pyqtSignal(int, object)
+    progress = pyqtSignal(int)  # message
+    error = pyqtSignal(TaskInfo, int, str)  # task_info, retry, message
+    finished = pyqtSignal(TaskInfo, int, str)  # task_info, retry, proxy
+    log_message = pyqtSignal(str)
 
 
-class TaskRunnable(QRunnable):
-    def __init__(self, work_item: dict, signals: WorkerSignals):
-        super().__init__()
-        self.user = work_item["user_info"]
-        self.action = work_item["action_info"]
-        self.proxy = work_item["proxy_config"]
-        self.signals = signals
+class BrowserWorker(QRunnable):
+    def __init__(
+        self,
+        task_info: TaskInfo,
+        retry_count: int,
+        proxy_raw: str,
+    ):
+        super(BrowserWorker, self).__init__()
+        self.task_info = task_info
+        self.browser_info = task_info.browser_info
+        self.action_info = task_info.action
+        self.proxy_raw = proxy_raw
+        self.retry_count = retry_count
+        self.signals = WorkerSignals()
+
         self.setAutoDelete(True)
 
     @pyqtSlot()
     def run(self):
-        uid = self.user.get("id", -1)
-        action_name = self.action.get("action_name", "<unknown>")
+        if self.action_info.action_name == "<empty>":
+            self.signals.log_message.emit(
+                f"[{self.browser_info.user_id}] - action is empty: delay in 300s."
+            )
+            time.sleep(300)
+            self.signals.finished.emit(self.task_info, self.retry_count, self.proxy_raw)
+            return
 
-        # 1) emit status
-        self.signals.status.emit(
-            uid, f"User {uid}: running '{action_name}' on proxy {self.proxy}"
-        )
-
+        proxy = None
+        # fetch proxy
+        self.signals.log_message.emit(f"[{self.browser_info.user_id}] Preparing ...")
         try:
-            # 2) Launch Playwright với proxy
+            proxy = get_proxy(self.proxy_raw)
+            if not proxy:
+                raise ValueError("Invalid proxy")
+            self.signals.log_message.emit(
+                f"[{self.browser_info.user_id}] Fetched proxy: {proxy}"
+            )
+        except ValueError as e:
+            # exc_type, value, tb = sys.exc_info()
+            # formatted_lines = traceback.format_exception(exc_type, value, tb)
+            print(f"[{self.task_info.browser_info.user_id}] {e}")
+            # time.sleep(30)
+            self.signals.finished.emit(self.task_info, self.retry_count, self.proxy_raw)
+            return
+            # self.signals.error.emit(
+            #     self.task_info,
+            #     self.retry_count,
+            #     "Invalid proxy",
+            # )
+            # return
+
+        # handle browser task
+        try:
+            action_name = self.action_info.action_name
+            if not self.action_info.action_name:
+                raise ValueError("Invalid action info")
+            action_function = ACTION_MAP.get(action_name)
+            if not action_function:
+                raise ValueError(f"Invalid action '{self.action_info.action_name}'")
             with sync_playwright() as p:
-                ctx = p.chromium.launch_persistent_context(
-                    user_data_dir=self.user["udd"],
-                    headless=self.user["headless"],
-                    args=PLAYWRIGHT_ARGS,
-                    user_agent=self.user.get("ua"),
-                    proxy=self.proxy,
+                context = p.chromium.launch_persistent_context(
+                    user_data_dir=self.browser_info.user_data_dir,
+                    user_agent=self.browser_info.user_agent,
+                    headless=self.browser_info.headless,
+                    # args=PLAYWRIGHT_ARGS,
+                    # ignore_default_args=["--enable-automation"],
+                    proxy=proxy,
                 )
-                page = ctx.new_page()
-                fn = ACTION_MAP.get(action_name)
-                if not fn:
-                    raise ValueError(f"Unknown action '{action_name}'")
-                fn(page, uid, self.action, self.signals)
-                page.close()
-            self.signals.status.emit(uid, f"User {uid}: '{action_name}' done.")
-        except PlaywrightTimeoutError as e:
-            self.signals.error.emit(uid, f"Timeout: {e}")
+                Tarnished.apply_stealth(context)
+                page = context.new_page()
+                stealth_sync(page)
+                action_function(
+                    page=page,
+                    browser_info=self.browser_info,
+                    action_info=self.action_info,
+                    signals=self.signals,
+                )
+                context.close()
+
+        # except TimeoutError as e:
+        #     self.signals.error.emit(self.task_info, self.retry_count, "Timeout error")
         except Exception as e:
-            self.signals.error.emit(uid, f"Error: {e}")
+            self.signals.error.emit(self.task_info, self.retry_count, str(e))
         finally:
-            # 3) emit finished và đưa proxy lên làm “kết quả” đi kèm
-            self.signals.finished.emit(uid, self.proxy)
-            log(f"User {uid}: Task '{action_name}' finished.")
+            self.signals.finished.emit(self.task_info, self.retry_count, self.proxy_raw)
+            return

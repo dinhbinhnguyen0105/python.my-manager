@@ -247,6 +247,16 @@ class UserService:
             return query.value(0)
         return None
 
+    @staticmethod
+    def get_udd(record_id):
+        udd_path = os.path.abspath(
+            os.path.join(UserUDDService.get_selected_udd(), str(record_id))
+        )
+        if os.path.exists(udd_path):
+            return udd_path
+        else:
+            return None
+
 
 class UserUDDService(BaseService):
     TABLE_NAME = constants.TABLE_USER_SETTINGS_UDD
@@ -307,3 +317,18 @@ class UserProxyService(BaseService):
             "updated_at",
             "created_at",
         ]
+
+    @classmethod
+    def get_proxies(cls):
+        proxies = []
+        db = QSqlDatabase.database(cls.CONNECTION)
+        query = QSqlQuery(db)
+        sql = f"SELECT value FROM {cls.TABLE_NAME}"
+        if not query.prepare(sql):
+            logger.error(query.lastError().text())
+            return proxies
+        if not exec_query(db, query):
+            return proxies
+        while query.next():
+            proxies.append(query.value(0))
+        return proxies
