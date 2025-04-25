@@ -252,10 +252,7 @@ class UserService:
         udd_path = os.path.abspath(
             os.path.join(UserUDDService.get_selected_udd(), str(record_id))
         )
-        if os.path.exists(udd_path):
-            return udd_path
-        else:
-            return None
+        return udd_path
 
 
 class UserUDDService(BaseService):
