@@ -27,8 +27,8 @@ def do_launch(
 ):
     try:
         # page.goto("https://www.facebook.com", timeout=60000)
-        signals.log_message.emit("f[{browser_info.user_id}] Wait for closing ...")
-        page.wait_for_event("close", timeout=900_000)
+        signals.log_message.emit(f"[{browser_info.user_id}] Wait for closing ...")
+        page.wait_for_event("close", timeout=0)
         signals.log_message.emit(f"[{browser_info.user_id}] Closed!")
     except Exception as e:
         exc_type, value, tb = sys.exc_info()
@@ -191,6 +191,27 @@ def do_discussion(
 
     except Exception as e:
         print("ERROR: ", e)
+        pass
+
+
+def do_marketplace(
+    page: Page,
+    browser_info: BrowserInfo,
+    action_info: ActionInfo,
+    signals: WorkerSignals,
+):
+    try:
+        signals.log_message.emit(
+            f"[{browser_info.user_id}] Performing <{action_info.action_name}> action ..."
+        )
+
+        # https://www.facebook.com/marketplace/create/item
+        page.goto("https://www.facebook.com/groups/feed/", timeout=60000)
+        page_language = page.locator("html").get_attribute("lang")
+        if page_language != "en":
+            signals.log_message.emit("Switch to English.")
+            return
+    except:
         pass
 
 
