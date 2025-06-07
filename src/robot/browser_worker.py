@@ -11,14 +11,6 @@ from src.utils.robot_handler import get_proxy
 from src.robot.browser_actions import ACTION_MAP
 
 
-PLAYWRIGHT_ARGS = [
-    "--disable-blink-features=AutomationControlled",
-    "--disable-infobars",
-    "--disable-extensions",
-    "--no-sandbox",
-]
-
-
 class WorkerSignals(QObject):
     progress = pyqtSignal(int)  # message
     error = pyqtSignal(TaskInfo, int, str)  # task_info, retry, message
@@ -54,7 +46,6 @@ class BrowserWorker(QRunnable):
             return
 
         proxy = None
-        # fetch proxy
         self.signals.log_message.emit(f"[{self.browser_info.user_id}] Preparing ...")
         try:
             proxy = get_proxy(self.proxy_raw)
@@ -64,18 +55,9 @@ class BrowserWorker(QRunnable):
                 f"[{self.browser_info.user_id}] Fetched proxy: {proxy}"
             )
         except ValueError as e:
-            # exc_type, value, tb = sys.exc_info()
-            # formatted_lines = traceback.format_exception(exc_type, value, tb)
             print(f"[{self.task_info.browser_info.user_id}] {e}")
-            # time.sleep(30)
             self.signals.finished.emit(self.task_info, self.retry_count, self.proxy_raw)
             return
-            # self.signals.error.emit(
-            #     self.task_info,
-            #     self.retry_count,
-            #     "Invalid proxy",
-            # )
-            # return
 
         # handle browser task
         try:
@@ -86,24 +68,48 @@ class BrowserWorker(QRunnable):
             if not action_function:
                 raise ValueError(f"Invalid action '{self.action_info.action_name}'")
             with sync_playwright() as p:
-                context = p.chromium.launch_persistent_context(
+                context_kwargs = dict(
                     user_data_dir=self.browser_info.user_data_dir,
                     user_agent=self.browser_info.user_agent,
                     headless=self.browser_info.headless,
-                    # args=PLAYWRIGHT_ARGS,
-                    # ignore_default_args=["--enable-automation"],
+                    args=[
+                        "--disable-blink-features=AutomationControlled",
+                        f'--app-name=Chromium - {self.browser_info.user_id or "Unknown User"}',
+                    ],
+                    ignore_default_args=["--enable-automation"],
                     proxy=proxy,
                 )
+                if self.browser_info.is_mobile:
+                    context_kwargs["viewport"] = {"width": 390, "height": 844}
+                    context_kwargs["screen"] = {"width": 390, "height": 844}
+                    context_kwargs["is_mobile"] = True
+                    context_kwargs["device_scale_factor"] = 3
+                    context_kwargs["has_touch"] = True
+                context = p.chromium.launch_persistent_context(**context_kwargs)
                 Tarnished.apply_stealth(context)
+                pages = context.pages
+                if pages:
+                    current_page = pages[0]
+                else:
+                    current_page = context.new_page()
+                info_html = f"""
+<html>
+    <head><title>{self.browser_info.user_id}</title></head>
+    <body>
+        <h2>user agent: {self.browser_info.user_agent}</h2>
+    </body>
+</html>
+"""
+                current_page.set_content(info_html)
                 page = context.new_page()
-                stealth_sync(page)
+                # stealth_sync(page)
+                time.sleep(5)
                 action_function(
                     page=page,
                     browser_info=self.browser_info,
                     action_info=self.action_info,
                     signals=self.signals,
                 )
-                context.close()
 
         # except TimeoutError as e:
         #     self.signals.error.emit(self.task_info, self.retry_count, "Timeout error")

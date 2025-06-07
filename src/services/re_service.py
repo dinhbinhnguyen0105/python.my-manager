@@ -395,7 +395,6 @@ JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
     @staticmethod
     def get_random_product(option_id):
         db = QSqlDatabase.database(constants.RE_CONNECTION)
-        query = QSqlQuery(db)
         sql = f"""
 SELECT 
     main.id,
@@ -428,7 +427,7 @@ JOIN {constants.TABLE_RE_SETTINGS_CATEGORIES} categories ON main.category_id = c
 JOIN {constants.TABLE_RE_SETTINGS_BUILDING_LINES} building_line_s ON main.building_line_id = building_line_s.id
 JOIN {constants.TABLE_RE_SETTINGS_FURNITURES} furniture_s ON main.furniture_id = furniture_s.id
 JOIN {constants.TABLE_RE_SETTINGS_LEGALS} legal_s ON main.legal_id = legal_s.id
-WHERE option_id = {option_id} ORDER BY RANDOM() LIMIT 1
+WHERE option_id = {option_id} AND status_id = 1 ORDER BY RANDOM() LIMIT 1
 """
         return fetch_single_result(db, sql, {"option_id": option_id})
 

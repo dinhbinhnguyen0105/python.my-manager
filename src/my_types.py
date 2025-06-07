@@ -9,6 +9,7 @@ class BrowserInfo:
     user_data_dir: str
     user_agent: str
     headless: str
+    is_mobile: bool
 
 
 @dataclass

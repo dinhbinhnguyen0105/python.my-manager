@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMessageBox, QWidget
+from PyQt6.QtWidgets import QMessageBox, QWidget, QDialog
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, QSortFilterProxyModel
 from src.models.user_model import UserModel
@@ -9,6 +9,7 @@ from src.controllers.re_controller import (
     REProductController,
 )
 from src.views.robot.action import Action
+from src.views.robot.dialog_robot_run import DialogRobotRun
 from src.ui.page_robot_ui import Ui_PageRobot
 
 
@@ -24,6 +25,13 @@ class PageRobot(QWidget, Ui_PageRobot):
         self.proxy_model.setSourceModel(self.source_model)
         self.user_controller = UserController(self.source_model)
 
+        self.headers = [
+            self.proxy_model.headerData(
+                col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole
+            )
+            for col in range(self.proxy_model.columnCount())
+        ]
+
         self.re_controller = REProductController(REProductModel())
         self.robot_controller = RobotController()
 
@@ -38,6 +46,19 @@ class PageRobot(QWidget, Ui_PageRobot):
         self.run_actions_btn.clicked.connect(self.on_run_bot)
         self.save_actions_btn.clicked.connect(self.on_save_actions)
 
+        self.username_input.textChanged.connect(
+            lambda: self.apply_filter(self.username_input.text(), "username")
+        )
+        self.type_input.textChanged.connect(
+            lambda: self.apply_filter(self.type_input.text(), "type")
+        )
+        self.group_input.textChanged.connect(
+            lambda: self.apply_filter(self.group_input.text(), "user_group")
+        )
+        self.note_input.textChanged.connect(
+            lambda: self.apply_filter(self.note_input.text(), "note")
+        )
+
     def setup_ui(self):
         self.set_table_ui()
 
@@ -48,17 +69,29 @@ class PageRobot(QWidget, Ui_PageRobot):
             self.users_table.SelectionBehavior.SelectRows
         )
 
-        self.users_table.hideColumn(1)
-        self.users_table.hideColumn(4)
-        self.users_table.hideColumn(5)
-        self.users_table.hideColumn(6)
-        self.users_table.hideColumn(7)
-        self.users_table.hideColumn(8)
-        self.users_table.hideColumn(12)
-        self.users_table.hideColumn(13)
-        self.users_table.hideColumn(14)
-        self.users_table.hideColumn(15)
-        self.users_table.hideColumn(16)
+        for column_hide_name in [
+            "status",
+            "password",
+            "two_fa",
+            "email",
+            "email_password",
+            "phone_number",
+            "mobile_ua",
+            "desktop_ua",
+            "created_at",
+            "updated_at",
+        ]:
+            if column_hide_name in self.headers:
+                column_index = self.headers.index(column_hide_name)
+                self.users_table.hideColumn(column_index)
+
+    def apply_filter(self, filter_text: str, column_name):
+        if filter_text == "Tất cả" or not filter_text.strip():
+            self.proxy_model.setFilterFixedString("")
+        else:
+            self.proxy_model.setFilterFixedString(filter_text)
+            if column_name in self.headers:
+                self.proxy_model.setFilterKeyColumn(self.headers.index(column_name))
 
     def on_add_new_action(self, index):
         clicked_tab = self.tabWidget.tabText(index)
@@ -83,15 +116,21 @@ class PageRobot(QWidget, Ui_PageRobot):
         for user in users:
             user_task = self.robot_controller.build_task(user, raw_actions)
             self.task_data[user_task.get("user_id")] = user_task
-        QMessageBox.information(self, "Lưu thành công", "Đã lưu action cho người dùng.")
+        QMessageBox.information(self, "Saved", "")
 
     def on_run_bot(self):
-        self.robot_controller.discussion(
-            self.task_data.values(),
-            is_mobile=False,
-            headless=False,
-            thread_num=4,
-        )
+        self.dialog_run = DialogRobotRun(self)
+        self.dialog_run.setWindowTitle("RE Settings")
+        self.dialog_run.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.dialog_run.setFixedSize(self.dialog_run.size())
+
+        if self.dialog_run.exec() == QDialog.DialogCode.Accepted:
+            self.robot_controller.run_task(
+                self.task_data.values(),
+                is_mobile=False,
+                headless=False,
+                thread_num=self.dialog_run.thread_num,
+            )
 
     def get_selected_ids(self):
         selected_rows = self.users_table.selectionModel().selectedRows()

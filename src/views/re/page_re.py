@@ -348,6 +348,7 @@ class PageRE(QWidget, Ui_PageRE):
         if event.button() == Qt.MouseButton.LeftButton:
             # self.image_clicked.emit()
             if self.img_paths:
+                print(self.img_paths)
                 open_file_explorer(self.img_paths[0])
         super().mousePressEvent(event)
 

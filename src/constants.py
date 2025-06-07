@@ -199,6 +199,7 @@ ICONS = [
     "️🥉",
     "️🏆",
 ]
+
 RE_SETTING_STATUSES = [
     {"label_vi": "sẵn có", "label_en": "available", "value": "available"},
     {"label_vi": "không sẵn có", "label_en": "unavailable", "value": "unavailable"},

@@ -44,14 +44,15 @@ class RobotController:
                     if is_mobile
                     else user_info.get("desktop_ua")
                 ),
+                is_mobile=is_mobile,
                 headless=headless,
             )
             task_info = TaskInfo(browser_info=browser_info, action=action_info)
             tasks.append(task_info)
-        self.robot_service = RobotService(thread_num=thread_num, max_retries=5)
+        self.robot_service = RobotService(thread_num=thread_num, max_retries=1)
         self.robot_service.add_tasks(tasks=tasks)
 
-    def discussion(
+    def run_task(
         self,
         task_data: List,
         is_mobile: bool = False,
@@ -74,6 +75,7 @@ class RobotController:
                         else user_info.get("desktop_ua")
                     ),
                     headless=headless,
+                    is_mobile=False,
                 )
                 try:
                     action_info: ActionInfo = task.get("actions").pop()

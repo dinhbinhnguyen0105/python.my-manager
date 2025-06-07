@@ -20,8 +20,9 @@ def get_images_in_directory(image_dir):
         return []
     images = []
     for file in os.listdir(image_dir):
-        if file.endswith((".png", ".jpg", ".jpeg")):
+        if file.lower().endswith((".png", ".jpg", ".jpeg")):
             images.append(os.path.join(image_dir, file))
+    images.sort()
     return images
 
 

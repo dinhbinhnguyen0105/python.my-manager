@@ -822,6 +822,20 @@ padding-left: 4px;</string>
                 </widget>
                </item>
                <item>
+                <widget class="QPushButton" name="action_import_btn">
+                 <property name="text">
+                  <string>Import</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="action_export_btn">
+                 <property name="text">
+                  <string>Export</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <spacer name="space">
                  <property name="orientation">
                   <enum>Qt::Orientation::Horizontal</enum>
